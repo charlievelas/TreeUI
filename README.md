@@ -1,5 +1,5 @@
 # TreeUI
-A GUI for performing analysis on a ROOT tree stored in a .root file.
+A GUI for performing analysis on a ROOT TTree stored in a .root file.
 
 # How to install
 For bash
@@ -10,4 +10,4 @@ export TreeUI=$PWD
 ```
 
 ## How to run
-        $TreeUI/loadGUI("/the/location/of/file.root")
+        root '$TreeUI/loadGUI("/the/location/of/file.root")'
