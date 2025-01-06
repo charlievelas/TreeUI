@@ -445,7 +445,7 @@ MyMainFrame::~MyMainFrame() {
    }
 }
 
-void twoD_hist_3condition(const char* filename) {
+void loadGUI(const char* filename) {
    // Popup the GUI with the given ROOT file...
    new MyMainFrame(gClient->GetRoot(), 600, 600, filename);
 }
