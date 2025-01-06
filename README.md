@@ -3,7 +3,7 @@ A GUI for performing analysis on a ROOT TTree stored in a .root file.
 
 Requires ROOT, tested on version 6.30/06.
 
-# How to install
+## How to install
 For bash
 ```bash
 git clone https://github.com/charlievelas/TreeUI.git
