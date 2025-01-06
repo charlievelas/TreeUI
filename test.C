@@ -1,3 +1,0 @@
-{
-cout << "test" << endl;
-}
