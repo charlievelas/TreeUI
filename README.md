@@ -1,7 +1,7 @@
 # TreeUI
 A GUI for performing analysis on a ROOT TTree stored in a .root file.
 
-Requires ROOT, works on version 6.30/06.
+Requires ROOT, tested on version 6.30/06.
 
 # How to install
 For bash
