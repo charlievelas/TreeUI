@@ -375,6 +375,7 @@ void MyMainFrame::DoDraw() {
    if (cutIndex > 0) {
       TBranch *cutBranch = (TBranch*)fTree->GetListOfBranches()->At(cutIndex - 1);
       Double_t cutMin = fMinInput->GetNumber();
+      Double_t cutMax = fMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", cutBranch->GetName(), cutMin, cutBranch->GetName(), cutMax);
    }
 
