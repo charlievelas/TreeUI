@@ -374,14 +374,7 @@ void MyMainFrame::DoDraw() {
    Int_t cutIndex = fCutComboBox->GetSelected();
    if (cutIndex > 0) {
       TBranch *cutBranch = (TBranch*)fTree->GetListOfBranches()->At(cutIndex - 1);
-      Double_t cutMin_old = fMinInput->GetNumber();
-      string cutMin_str = std::to_string(cutMin_old);
-      cutMin_str.erase(cutMin_str.find_last_not_of('0') + 1, std::string::npos);
-      if (cutMin_str.back() == '.') {
-          cutMin_str.pop_back();
-      }
-      Double_t cutMin = std::stof(cutMin_str);
-      Double_t cutMax = fMaxInput->GetNumber();
+      Double_t cutMin = fMinInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", cutBranch->GetName(), cutMin, cutBranch->GetName(), cutMax);
    }
 
