@@ -10,4 +10,4 @@ export TreeUI=$PWD
 ```
 
 ## How to run
-        $TreeUI/loadGUI(/the/location/of/file.root)
+        $TreeUI/loadGUI("/the/location/of/file.root")
