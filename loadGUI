@@ -22,6 +22,7 @@ private:
     TGComboBox          *fCutComboBox; // Drop-down list for "Branch to cut on"
     TGComboBox          *fSecondComboBox; // New drop-down for second condition branch
     TGComboBox          *fThirdComboBox; // Third drop-down for branch to apply to (added missing combo box)
+    TGComboBox          *fFourthComboBox; // Fourth drop-down for branch to apply to (added missing combo box)
     TGNumberEntry       *fBinsEntry;  // Number of bins input
     TGNumberEntry       *fMinXEntry;  // Minimum X input
     TGNumberEntry       *fMaxXEntry;  // Maximum X input
@@ -32,8 +33,10 @@ private:
     TGNumberEntry       *fMaxInput;   // Max input box
     TGNumberEntry       *fSecondMinInput;  // Min input box for second condition
     TGNumberEntry       *fSecondMaxInput;  // Max input box for second condition
-    TGNumberEntry       *fThirdMinInput; // Min input for the fourth branch condition
-    TGNumberEntry       *fThirdMaxInput; // Max input for the fourth branch condition
+    TGNumberEntry       *fThirdMinInput; // Min input for the third branch condition
+    TGNumberEntry       *fThirdMaxInput; // Max input for the third branch condition
+    TGNumberEntry       *fFourthMinInput; // Min input for the third branch condition
+    TGNumberEntry       *fFourthMaxInput; // Max input for the third branch condition
     TFile               *fFile;       // ROOT file pointer
     TTree               *fTree;       // TTree pointer
     Int_t               fSelectedBranch; // Store selected branch index
@@ -286,6 +289,44 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Add the new frame to the main vertical frame (vframe)
     vframe->AddFrame(branchInputFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
+    // Create a vertical frame for the new drop-down list and the corresponding min/max input boxes
+    TGVerticalFrame *fourthConditionFrame = new TGVerticalFrame(vframe, 200, 100);
+
+    // "Foruth branch to cut on:" label and ComboBox
+    TGLabel *fourthBranchLabel = new TGLabel(fourthConditionFrame, "Fourth branch to cut on:");
+    fourthConditionFrame->AddFrame(fourthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fFourthComboBox = new TGComboBox(fourthConditionFrame, "Select branch", 50);
+    fFourthComboBox->Resize(200, 25);
+    fourthConditionFrame->AddFrame(fFourthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    // Create a horizontal frame for the min/max input boxes
+    TGHorizontalFrame *fourthMinMaxFrame = new TGHorizontalFrame(fourthConditionFrame, 200, 60);
+
+    // Min label
+    TGLabel *fourthMinLabel = new TGLabel(fourthMinMaxFrame, "Min");
+    fourthMinMaxFrame->AddFrame(fourthMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+
+    // Min input box (float)
+    fFourthMinInput = new TGNumberEntry(fourthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fFourthMinInput->SetWidth(60);
+    fourthMinMaxFrame->AddFrame(fFourthMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+
+    // Max label
+    TGLabel *fourthMaxLabel = new TGLabel(fourthMinMaxFrame, "Max");
+    fourthMinMaxFrame->AddFrame(fourthMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+
+    // Max input box (float)
+    fFourthMaxInput = new TGNumberEntry(fourthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fFourthMaxInput->SetWidth(60);
+    fourthMinMaxFrame->AddFrame(fFourthMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+
+    // Add the min/max input frame to the main frame
+    fourthConditionFrame->AddFrame(fourthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Add the new frame to the main vertical frame (vframe)
+    vframe->AddFrame(fourthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
     // Add the Draw button (already present)
     TGTextButton *draw = new TGTextButton(vframe, "&Draw");
     draw->Connect("Clicked()", "MyMainFrame", this, "DoDraw()"); 
@@ -303,6 +344,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     fCutComboBox->AddEntry("None", 0); // Add "None" branch in first place
     fSecondComboBox->AddEntry("None", 0); // Add "None" branch in first place
     fThirdComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fFourthComboBox->AddEntry("None", 0); // Add "None" branch in first place
 
     // Populate the ComboBoxes with branch names
     if (fTree) {
@@ -314,6 +356,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
           fCutComboBox->AddEntry(branch->GetName(), i + 1); // Populate the cut ComboBox as well
           fSecondComboBox->AddEntry(branch->GetName(), i + 1); // Populate the second condition ComboBox
           fThirdComboBox->AddEntry(branch->GetName(), i + 1); // Add branches to ComboBox
+          fFourthComboBox->AddEntry(branch->GetName(), i + 1); // Add branches to ComboBox
        }
     }
 
@@ -397,9 +440,18 @@ void MyMainFrame::DoDraw() {
       drawCondition += Form(" && %s > %.10g && %s < %.10g", branchInput->GetName(), branchMin, branchInput->GetName(), branchMax);
    }
 
+   // Apply fourth condition if selected 
+   Int_t fourthCutIndex = fFourthComboBox->GetSelected();
+   if (fourthCutIndex > 0 && branchInputIndex > 0) {
+      TBranch *fourthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(fourthCutIndex - 1);
+      Double_t fourthCutMin = fFourthMinInput->GetNumber();
+      Double_t fourthCutMax = fFourthMaxInput->GetNumber();
+      drawCondition += Form(" && %s > %.10g && %s < %.10g", fourthCutBranch->GetName(), fourthCutMin, fourthCutBranch->GetName(), fourthCutMax);
+   }
+
 
    // Debug print: Check the draw strings
-   std::cout << "////////////////" << std::endl;
+   std::cout << "////////  Drawn with following  ////////" << std::endl;
    std::cout << "Draw command: " << drawCommand.Data() << std::endl;
    std::cout << "Draw condition: " << drawCondition.Data() << std::endl;
    std::cout << "Draw stlye: " << drawStyle.Data() << std::endl;
