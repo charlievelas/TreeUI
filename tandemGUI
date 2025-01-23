@@ -40,6 +40,7 @@ private:
     TFile               *fFile1;       // ROOT file pointer
     TFile               *fFile2;       // ROOT file pointer
     TTree               *fTree;       // TTree pointer
+    TTree               *fTree2;       // TTree pointer
     Int_t               fSelectedBranch; // Store selected branch index
     Int_t               fXSelectedBranch; // Store selected branch index
 public:
@@ -533,10 +534,15 @@ MyMainFrame::~MyMainFrame() {
    // Clean up used widgets: frames, buttons, layout hints
    fMain->Cleanup();
    delete fMain;
-   if (fFile) {
-      fFile->Close();
-      delete fFile;
+   if (fFile1) {
+      fFile1->Close();
+      delete fFile1;
    }
+   if (fFile2) {
+      fFile2->Close();
+      delete fFile2;
+   }
+
 }
 
 void tandemGUI(const char* filename) {
