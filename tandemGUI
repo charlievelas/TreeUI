@@ -37,7 +37,8 @@ private:
     TGNumberEntry       *fThirdMaxInput; // Max input for the third branch condition
     TGNumberEntry       *fFourthMinInput; // Min input for the third branch condition
     TGNumberEntry       *fFourthMaxInput; // Max input for the third branch condition
-    TFile               *fFile;       // ROOT file pointer
+    TFile               *fFile1;       // ROOT file pointer
+    TFile               *fFile2;       // ROOT file pointer
     TTree               *fTree;       // TTree pointer
     Int_t               fSelectedBranch; // Store selected branch index
     Int_t               fXSelectedBranch; // Store selected branch index
