@@ -94,12 +94,12 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
 
     // Compare branch names
     if (branches1 == branches2) {
-        std::cout << "The trees in " << fFile1 << " and " << fFile2 << " have identical branch names." << std::endl;
+        std::cout << "The trees in " << filename1 << " and " << filename2 << " have identical branch names." << std::endl;
     } else {
-        std::cout << "Branch names differ between " << fFile1 << " and " << fFile2 << ":" << std::endl;
+        std::cout << "Branch names differ between " << filename1 << " and " << filename2 << ":" << std::endl;
         
         // Print branches that are in the first tree but not the second
-        std::cout << "Branches in " << fFile1 << " but not in " << fFile2 << ":" << std::endl;
+        std::cout << "Branches in " << filename1 << " but not in " << filename2 << ":" << std::endl;
         for (const auto& branch : branches1) {
             if (branches2.find(branch) == branches2.end()) {
                 std::cout << branch << "    ";
@@ -107,7 +107,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
         }
 
         // Print branches that are in the second tree but not the first
-        std::cout << "Branches in " << fFile2 << " but not in " << fFile1 << ":" << std::endl;
+        std::cout << "Branches in " << filename2 << " but not in " << filename1 << ":" << std::endl;
         for (const auto& branch : branches2) {
             if (branches1.find(branch) == branches1.end()) {
                 std::cout << branch << "    ";
