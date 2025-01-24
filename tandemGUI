@@ -17,6 +17,7 @@ class MyMainFrame {
 private:
     TGMainFrame         *fMain;
     TRootEmbeddedCanvas *fEcanvas;
+    TRootEmbeddedCanvas *fEcanvas2;
     TGComboBox          *fComboBox;  // Drop-down list for Branch names
     TGComboBox          *fXComboBox;  // Drop-down list for Branch names
     TGComboBox          *fCutComboBox; // Drop-down list for "Branch to cut on"
@@ -139,8 +140,6 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Create a horizontal frame to hold the canvas and widgets side by side
     TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain, w, h);
 
-////
-
     // Create canvas widget (on the left)
     fEcanvas = new TRootEmbeddedCanvas("Ecanvas", hframe, 700, 700);
     hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 1));
@@ -148,8 +147,6 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Create canvas widget (on the left)
     fEcanvas2 = new TRootEmbeddedCanvas("Ecanvas2", hframe, 700, 700);
     hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
-
-////
 
     // Create a vertical frame for buttons and drop-down list (on the right)
     TGVerticalFrame *vframe = new TGVerticalFrame(hframe, 200, 140);
