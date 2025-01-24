@@ -590,5 +590,5 @@ MyMainFrame::~MyMainFrame() {
 
 void tandemGUI(const char* filename1, const char* filename2) {
    // Popup the GUI with the given ROOT file...
-   new MyMainFrame(gClient->GetRoot(), 600, 600, filename);
+   new MyMainFrame(gClient->GetRoot(), 600, 600, filename1, filename2);
 }
