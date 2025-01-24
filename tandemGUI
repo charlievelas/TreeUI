@@ -578,13 +578,17 @@ MyMainFrame::~MyMainFrame() {
    // Clean up used widgets: frames, buttons, layout hints
    fMain->Cleanup();
    delete fMain;
-   if (fFile) {
-      fFile->Close();
-      delete fFile;
+   if (fFile1) {
+      fFile1->Close();
+      delete fFile1;
+   }
+    if (fFile2) {
+      fFile2->Close();
+      delete fFile2;
    }
 }
 
-void tandemGUI(const char* filename) {
+void tandemGUI(const char* filename1, const char* filename2) {
    // Popup the GUI with the given ROOT file...
    new MyMainFrame(gClient->GetRoot(), 600, 600, filename);
 }
