@@ -70,12 +70,6 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Get the first TTrees from the files
     fTree = (TTree*)fFile1->Get(fFile1->GetListOfKeys()->At(0)->GetName()); // 'fTree' has remained 'fTree' for the sake of not having to rewrite large parts of later sections
     fTree2 = (TTree*)fFile2->Get(fFile2->GetListOfKeys()->At(0)->GetName());
-    /*
-    if (!fTree) {
-        Error("MyMainFrame", "Failed to find TTree named 'tree' in the file.");
-        return;
-    }
-    */
     
     // Ensure both fTree and fTree2 have the same branch names (not necessarily the same data of course)
     std::set<std::string> branches1, branches2;
@@ -84,54 +78,58 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     TObjArray* branchesArray2 = fTree2->GetListOfBranches();
     
     // Total number of branches for percentage calculation
-    int totalBranches1 = branchesArray1->GetEntries();
-    int totalBranches2 = branchesArray2->GetEntries();
+    double totalBranches1 = branchesArray1->GetEntries();
+    double totalBranches2 = branchesArray2->GetEntries();
 
-    // Helper lambda for live progress update
-    auto print_progress = [](int i, int total, const char* tree_name) {
-        int Percentage = total / 100;  // Update every 1%
-        if (i % Percentage == 0) {
-            fprintf(stderr, "Processing branches in %s: %d%%\r", tree_name, i / Percentage);
-            fflush(stderr);
-        }
-    };
-
-    for (int i = 0; i < totalBranches1; i++) {
+    for (double i = 0; i < totalBranches1; i++) {
         TBranch* branch = (TBranch*)branchesArray1->At(i);
         branches1.insert(branch->GetName());
         // Print progress for tree1
-        print_progress(i, totalBranches1, "tree1");
+        double percen;
+        percen = (i/totalBranches1)*100;
+        if(i==totalBranches1-1){
+            percen=100;
+        }
+        fprintf(stderr, "Checking branches in tree 1: %.2f%%\r", percen);
+        fflush(stderr);
     }
     fprintf(stderr, "\n");  // New line after progress completion
 
     for (int i = 0; i < totalBranches2; i++) {
         TBranch* branch = (TBranch*)branchesArray2->At(i);
         branches2.insert(branch->GetName());
-        // Print progress for tree2
-        print_progress(i, totalBranches2, "tree2");
+        double percen;
+        percen = (i/totalBranches2)*100;
+        if(i==totalBranches1-1){
+            percen=100;
+        }
+        fprintf(stderr, "Checking branches in tree 2: %.2f%%\r", percen);
+        fflush(stderr);
     }
+    fprintf(stderr, "\n");  // New line after progress completion
 
     // Compare branch names
     if (branches1 == branches2) {
-        std::cout << "The trees in " << fFile1 << " and " << fFile2 << " have identical branch names." << std::endl;
+        std::cout << "The trees in '" << filename1 << "' and '" << filename2 << "' have identical branch names." << std::endl;
     } else {
-        std::cout << "Branch names differ between " << fFile1 << " and " << fFile2 << ":" << std::endl;
+        std::cout << "Branch names differ between " << filename1 << " and " << filename2 << "." << std::endl;
         
         // Print branches that are in the first tree but not the second
-        std::cout << "Branches in " << fFile1 << " but not in " << fFile2 << ":" << std::endl;
+        std::cout << "Branches in " << filename1 << " but not in " << filename2 << ":" << std::endl;
         for (const auto& branch : branches1) {
             if (branches2.find(branch) == branches2.end()) {
-                std::cout << branch << "    ";
+                std::cout << "\"" << branch << "\" ";
             }
         }
-
+        std::cout << endl;
         // Print branches that are in the second tree but not the first
-        std::cout << "Branches in " << fFile2 << " but not in " << fFile1 << ":" << std::endl;
+        std::cout << "Branches in " << filename2 << " but not in " << filename1 << ":" << std::endl;
         for (const auto& branch : branches2) {
             if (branches1.find(branch) == branches1.end()) {
-                std::cout << branch << "    ";
+                std::cout << "\"" << branch << "\" ";
             }
         }
+        return;
     }
 
     // Create a main frame
@@ -142,11 +140,11 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
 
     // Create canvas widget (on the left)
     fEcanvas = new TRootEmbeddedCanvas("Ecanvas", hframe, 700, 700);
-    hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 1));
+    hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
 
     // Create canvas widget (on the left)
     fEcanvas2 = new TRootEmbeddedCanvas("Ecanvas2", hframe, 700, 700);
-    hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
+    hframe->AddFrame(fEcanvas2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
 
     // Create a vertical frame for buttons and drop-down list (on the right)
     TGVerticalFrame *vframe = new TGVerticalFrame(hframe, 200, 140);
@@ -545,8 +543,6 @@ void MyMainFrame::DoDraw() {
    // Update the canvas to reflect the new drawing
    fEcanvas->GetCanvas()->Update();
 
-////
-
    // Now, draw the histogram 2
    fEcanvas2->GetCanvas()->cd();  // Ensure we are drawing on the right pad
 
@@ -558,8 +554,6 @@ void MyMainFrame::DoDraw() {
 
    // Update the canvas to reflect the new drawing
    fEcanvas2->GetCanvas()->Update();
-
-////
 
 }
 
