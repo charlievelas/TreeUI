@@ -138,9 +138,17 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Create a horizontal frame to hold the canvas and widgets side by side
     TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain, w, h);
 
+    // canvas label
+    TGLabel *canvasLabel1 = new TGLabel(hframe, filename1);
+    hframe->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 1));
+
     // Create canvas widget (on the left)
     fEcanvas = new TRootEmbeddedCanvas("Ecanvas", hframe, 700, 700);
     hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
+
+    // canvas label
+    TGLabel *canvasLabel2 = new TGLabel(hframe, filename2);
+    hframe->AddFrame(canvasLabel2, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 1));
 
     // Create canvas widget (on the left)
     fEcanvas2 = new TRootEmbeddedCanvas("Ecanvas2", hframe, 700, 700);
@@ -470,21 +478,21 @@ void MyMainFrame::DoDraw() {
 
    TString drawCommand = "";
    TString drawStyle = "";
-
-////
+   TString drawTitle = "";
 
    // Build the draw command for 1D or 2D histogram with custom range, bins, and condition
    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
        drawCommand = TString::Format("%s>>hist(%d,%f,%f)", branchName.c_str(), nBins, minX, maxX);
+       drawTitle += branchName.c_str();
    } else {
        TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
        drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", branchName.c_str(), Xbranch->GetName(), XnBins, XminX, XmaxX, nBins, minX, maxX);
        drawStyle = "COLZ";
+       drawTitle += ":";
+       drawTitle += Xbranch->GetName();
        fEcanvas->GetCanvas()->SetLogz();
        fEcanvas2->GetCanvas()->SetLogz();
    }
-
-////
 
    TString drawCondition = "";
 
@@ -495,33 +503,46 @@ void MyMainFrame::DoDraw() {
       Double_t cutMin = fMinInput->GetNumber();
       Double_t cutMax = fMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", cutBranch->GetName(), cutMin, cutBranch->GetName(), cutMax);
+      drawTitle += Form(", %s[%.10g,%.10g]",cutBranch->GetName(), cutMin, cutMax);  
    }
 
    // Apply second condition if selected
    Int_t secondCutIndex = fSecondComboBox->GetSelected();
-   if (secondCutIndex > 0 && cutIndex > 0) {
+   if (secondCutIndex > 0) {
+      if (cutIndex > 0){
+        drawCondition += "&&";
+      }
       TBranch *secondCutBranch = (TBranch*)fTree->GetListOfBranches()->At(secondCutIndex - 1);
       Double_t secondCutMin = fSecondMinInput->GetNumber();
       Double_t secondCutMax = fSecondMaxInput->GetNumber();
-      drawCondition += Form(" && %s > %.10g && %s < %.10g", secondCutBranch->GetName(), secondCutMin, secondCutBranch->GetName(), secondCutMax);
+      drawCondition += Form("%s > %.10g && %s < %.10g", secondCutBranch->GetName(), secondCutMin, secondCutBranch->GetName(), secondCutMax);
+      drawTitle += Form(", %s[%.10g,%.10g]",secondCutBranch->GetName(), secondCutMin, secondCutMax);
    }
 
    // Apply third condition if selected 
    Int_t branchInputIndex = fThirdComboBox->GetSelected();
-   if (branchInputIndex > 0 && secondCutIndex > 0) {
+   if (branchInputIndex > 0) {
+      if (secondCutIndex > 0 || cutIndex > 0){
+        drawCondition += "&&";
+      }
       TBranch *branchInput = (TBranch*)fTree->GetListOfBranches()->At(branchInputIndex - 1);
       Double_t branchMin = fThirdMinInput->GetNumber();
       Double_t branchMax = fThirdMaxInput->GetNumber();
-      drawCondition += Form(" && %s > %.10g && %s < %.10g", branchInput->GetName(), branchMin, branchInput->GetName(), branchMax);
+      drawCondition += Form("%s > %.10g && %s < %.10g", branchInput->GetName(), branchMin, branchInput->GetName(), branchMax);
+      drawTitle += Form(", %s[%.10g,%.10g]",branchInput->GetName(), branchMin, branchMax);
    }
 
    // Apply fourth condition if selected 
    Int_t fourthCutIndex = fFourthComboBox->GetSelected();
-   if (fourthCutIndex > 0 && branchInputIndex > 0) {
+   if (fourthCutIndex > 0 || cutIndex > 0 || branchInputIndex > 0) {
+      if (branchInputIndex > 0){
+        drawCondition += "&&";
+      }
       TBranch *fourthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(fourthCutIndex - 1);
       Double_t fourthCutMin = fFourthMinInput->GetNumber();
       Double_t fourthCutMax = fFourthMaxInput->GetNumber();
-      drawCondition += Form(" && %s > %.10g && %s < %.10g", fourthCutBranch->GetName(), fourthCutMin, fourthCutBranch->GetName(), fourthCutMax);
+      drawCondition += Form("%s > %.10g && %s < %.10g", fourthCutBranch->GetName(), fourthCutMin, fourthCutBranch->GetName(), fourthCutMax);
+      drawTitle += Form(", %s[%.10g,%.10g]",fourthCutBranch->GetName(), fourthCutMin, fourthCutMax);
    }
 
 
