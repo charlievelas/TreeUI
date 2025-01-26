@@ -138,21 +138,34 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Create a horizontal frame to hold the canvas and widgets side by side
     TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain, w, h);
 
-    // canvas label
-    TGLabel *canvasLabel1 = new TGLabel(hframe, filename1);
-    hframe->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 1));
-
-    // Create canvas widget (on the left)
-    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", hframe, 700, 700);
-    hframe->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
+    // Create a vertical frame to hold the label and canvas
+    TGVerticalFrame *vframe1 = new TGVerticalFrame(hframe);
 
     // canvas label
-    TGLabel *canvasLabel2 = new TGLabel(hframe, filename2);
-    hframe->AddFrame(canvasLabel2, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 1));
+    TGLabel *canvasLabel1 = new TGLabel(vframe1, filename1);
+    vframe1->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5));
 
     // Create canvas widget (on the left)
-    fEcanvas2 = new TRootEmbeddedCanvas("Ecanvas2", hframe, 700, 700);
-    hframe->AddFrame(fEcanvas2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1));
+    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", vframe1, 700, 700);
+    vframe1->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5)); // Canvas with all margins
+
+    // Add canvas1 and label1 to hframe
+    hframe->AddFrame(vframe1, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5)); // Vertical frame in the main frame
+
+    // Create a vertical frame to hold the label and canvas
+    TGVerticalFrame *vframe2 = new TGVerticalFrame(hframe);
+
+    // canvas label
+    TGLabel *canvasLabel2 = new TGLabel(vframe2, filename2);
+    vframe2->AddFrame(canvasLabel2, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5));
+
+    // Create canvas widget (on the left)
+    fEcanvas2 = new TRootEmbeddedCanvas("Ecanvas2", vframe2, 700, 700);
+    vframe2->AddFrame(fEcanvas2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5)); // Canvas with all margins
+
+    // Add canvas1 and label1 to hframe
+    hframe->AddFrame(vframe2, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5)); // Vertical frame in the main frame
+
 
     // Create a vertical frame for buttons and drop-down list (on the right)
     TGVerticalFrame *vframe = new TGVerticalFrame(hframe, 200, 140);
@@ -476,9 +489,9 @@ void MyMainFrame::DoDraw() {
    Double_t XminX = fXMinXEntry->GetNumber();
    Double_t XmaxX = fXMaxXEntry->GetNumber();
 
-   TString drawCommand = "";
+   std::string drawCommand = "";
    TString drawStyle = "";
-   TString drawTitle = "";
+   std::string drawTitle = "";
 
    // Build the draw command for 1D or 2D histogram with custom range, bins, and condition
    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
@@ -488,8 +501,9 @@ void MyMainFrame::DoDraw() {
        TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
        drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", branchName.c_str(), Xbranch->GetName(), XnBins, XminX, XmaxX, nBins, minX, maxX);
        drawStyle = "COLZ";
+       drawTitle += branchName.c_str();
        drawTitle += ":";
-       drawTitle += Xbranch->GetName();
+       drawTitle += Form("%s",Xbranch->GetName());
        fEcanvas->GetCanvas()->SetLogz();
        fEcanvas2->GetCanvas()->SetLogz();
    }
@@ -510,7 +524,7 @@ void MyMainFrame::DoDraw() {
    Int_t secondCutIndex = fSecondComboBox->GetSelected();
    if (secondCutIndex > 0) {
       if (cutIndex > 0){
-        drawCondition += "&&";
+        drawCondition += " && ";
       }
       TBranch *secondCutBranch = (TBranch*)fTree->GetListOfBranches()->At(secondCutIndex - 1);
       Double_t secondCutMin = fSecondMinInput->GetNumber();
@@ -523,7 +537,7 @@ void MyMainFrame::DoDraw() {
    Int_t branchInputIndex = fThirdComboBox->GetSelected();
    if (branchInputIndex > 0) {
       if (secondCutIndex > 0 || cutIndex > 0){
-        drawCondition += "&&";
+        drawCondition += " && ";
       }
       TBranch *branchInput = (TBranch*)fTree->GetListOfBranches()->At(branchInputIndex - 1);
       Double_t branchMin = fThirdMinInput->GetNumber();
@@ -534,9 +548,9 @@ void MyMainFrame::DoDraw() {
 
    // Apply fourth condition if selected 
    Int_t fourthCutIndex = fFourthComboBox->GetSelected();
-   if (fourthCutIndex > 0 || cutIndex > 0 || branchInputIndex > 0) {
-      if (branchInputIndex > 0){
-        drawCondition += "&&";
+   if (fourthCutIndex > 0) {
+      if (branchInputIndex > 0 || secondCutIndex > 0 || cutIndex > 0){
+        drawCondition += " && ";
       }
       TBranch *fourthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(fourthCutIndex - 1);
       Double_t fourthCutMin = fFourthMinInput->GetNumber();
@@ -548,9 +562,10 @@ void MyMainFrame::DoDraw() {
 
    // Debug print: Check the draw strings
    std::cout << "////////  Drawn with following  ////////" << std::endl;
-   std::cout << "Draw command: " << drawCommand.Data() << std::endl;
+   //std::cout << "Draw command: " << drawCommand.Data() << std::endl;
    std::cout << "Draw condition: " << drawCondition.Data() << std::endl;
    std::cout << "Draw stlye: " << drawStyle.Data() << std::endl;
+   std::cout << "Draw title: " << drawTitle << std::endl;
 
    // Now, draw the histogram 1
    fEcanvas->GetCanvas()->cd();  // Ensure we are drawing on the right pad
@@ -559,7 +574,16 @@ void MyMainFrame::DoDraw() {
    fEcanvas->GetCanvas()->Clear();
 
    // Draw the histogram with the constructed condition
-   fTree->Draw(drawCommand,drawCondition,drawStyle);
+   fTree->Draw(drawCommand.c_str(),drawCondition,drawStyle);
+
+   // Get histogram
+   if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
+       TH1F *hist = (TH1F*)gDirectory->Get("hist");
+       hist->SetTitle(drawTitle.c_str());
+   } else {
+       TH2F *hist = (TH2F*)gDirectory->Get("hist");
+       hist->SetTitle(drawTitle.c_str());
+   }
 
    // Update the canvas to reflect the new drawing
    fEcanvas->GetCanvas()->Update();
@@ -571,7 +595,16 @@ void MyMainFrame::DoDraw() {
    fEcanvas2->GetCanvas()->Clear();
 
    // Draw the histogram with the constructed condition
-   fTree2->Draw(drawCommand,drawCondition,drawStyle);
+   fTree2->Draw(drawCommand.c_str(),drawCondition,drawStyle);
+
+   // Get histogram 2
+   if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
+       TH1F *hist2 = (TH1F*)gDirectory->Get("hist");
+       hist2->SetTitle(drawTitle.c_str());
+   } else {
+       TH2F *hist2 = (TH2F*)gDirectory->Get("hist");
+       hist2->SetTitle(drawTitle.c_str());
+   }
 
    // Update the canvas to reflect the new drawing
    fEcanvas2->GetCanvas()->Update();
