@@ -9,6 +9,8 @@
 #include <RQ_OBJECT.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <iostream>
+#include <string>
 #include <TGNumberEntry.h>  // Include for number entry widgets
 #include <TGLabel.h>  // Include for label widget
 
@@ -45,14 +47,14 @@ private:
     Int_t               fSelectedBranch; // Store selected branch index
     Int_t               fXSelectedBranch; // Store selected branch index
 public:
-    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* filename1, const char* filename2);
+    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* filename1, const char* filename2, const char* opt = nullptr);
     virtual ~MyMainFrame();
     void DoDraw();
     void OnSelect(Int_t id);
     void OnXSelect(Int_t id);
 };
 
-MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* filename1, const char* filename2) 
+MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* filename1, const char* filename2, const char* opt) 
     : fSelectedBranch(-1), fXSelectedBranch(-1) {  // Initialize fSelectedBranch to -1 (no selection initially)
 
     // Open the ROOT files
@@ -71,66 +73,73 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     fTree = (TTree*)fFile1->Get(fFile1->GetListOfKeys()->At(0)->GetName()); // 'fTree' has remained 'fTree' for the sake of not having to rewrite large parts of later sections
     fTree2 = (TTree*)fFile2->Get(fFile2->GetListOfKeys()->At(0)->GetName());
     
-    // Ensure both fTree and fTree2 have the same branch names (not necessarily the same data of course)
-    std::set<std::string> branches1, branches2;
+    // Check opt, if not equal to "override" then branch check, else then no branch check
+    std:string opt_str = opt;
+    if(opt_str!="override"){
 
-    TObjArray* branchesArray1 = fTree->GetListOfBranches();
-    TObjArray* branchesArray2 = fTree2->GetListOfBranches();
-    
-    // Total number of branches for percentage calculation
-    double totalBranches1 = branchesArray1->GetEntries();
-    double totalBranches2 = branchesArray2->GetEntries();
+        // Ensure both fTree and fTree2 have the same branch names (not necessarily the same data of course)
+        std::set<std::string> branches1, branches2;
 
-    for (double i = 0; i < totalBranches1; i++) {
-        TBranch* branch = (TBranch*)branchesArray1->At(i);
-        branches1.insert(branch->GetName());
-        // Print progress for tree1
-        double percen;
-        percen = (i/totalBranches1)*100;
-        if(i==totalBranches1-1){
-            percen=100;
-        }
-        fprintf(stderr, "Checking branches in tree 1: %.2f%%\r", percen);
-        fflush(stderr);
-    }
-    fprintf(stderr, "\n");  // New line after progress completion
-
-    for (int i = 0; i < totalBranches2; i++) {
-        TBranch* branch = (TBranch*)branchesArray2->At(i);
-        branches2.insert(branch->GetName());
-        double percen;
-        percen = (i/totalBranches2)*100;
-        if(i==totalBranches1-1){
-            percen=100;
-        }
-        fprintf(stderr, "Checking branches in tree 2: %.2f%%\r", percen);
-        fflush(stderr);
-    }
-    fprintf(stderr, "\n");  // New line after progress completion
-
-    // Compare branch names
-    if (branches1 == branches2) {
-        std::cout << "The trees in '" << filename1 << "' and '" << filename2 << "' have identical branch names." << std::endl;
-    } else {
-        std::cout << "Branch names differ between " << filename1 << " and " << filename2 << "." << std::endl;
+        TObjArray* branchesArray1 = fTree->GetListOfBranches();
+        TObjArray* branchesArray2 = fTree2->GetListOfBranches();
         
-        // Print branches that are in the first tree but not the second
-        std::cout << "Branches in " << filename1 << " but not in " << filename2 << ":" << std::endl;
-        for (const auto& branch : branches1) {
-            if (branches2.find(branch) == branches2.end()) {
-                std::cout << "\"" << branch << "\" ";
+        // Total number of branches for percentage calculation
+        double totalBranches1 = branchesArray1->GetEntries();
+        double totalBranches2 = branchesArray2->GetEntries();
+
+        for (double i = 0; i < totalBranches1; i++) {
+            TBranch* branch = (TBranch*)branchesArray1->At(i);
+            branches1.insert(branch->GetName());
+            // Print progress for tree1
+            double percen;
+            percen = (i/totalBranches1)*100;
+            if(i==totalBranches1-1){
+                percen=100;
             }
+            fprintf(stderr, "Checking branches in tree 1: %.2f%%\r", percen);
+            fflush(stderr);
         }
-        std::cout << endl;
-        // Print branches that are in the second tree but not the first
-        std::cout << "Branches in " << filename2 << " but not in " << filename1 << ":" << std::endl;
-        for (const auto& branch : branches2) {
-            if (branches1.find(branch) == branches1.end()) {
-                std::cout << "\"" << branch << "\" ";
+        fprintf(stderr, "\n");  // New line after progress completion
+
+        for (int i = 0; i < totalBranches2; i++) {
+            TBranch* branch = (TBranch*)branchesArray2->At(i);
+            branches2.insert(branch->GetName());
+            double percen;
+            percen = (i/totalBranches2)*100;
+            if(i==totalBranches1-1){
+                percen=100;
             }
+            fprintf(stderr, "Checking branches in tree 2: %.2f%%\r", percen);
+            fflush(stderr);
         }
-        return;
+        fprintf(stderr, "\n");  // New line after progress completion
+
+        // Compare branch names
+        if (branches1 == branches2) {
+            std::cout << "The trees in '" << filename1 << "' and '" << filename2 << "' have identical branch names." << std::endl;
+        } else {
+            std::cout << "Branch names differ between " << filename1 << " and " << filename2 << "." << std::endl;
+            
+            std::cout << endl;
+            // Print branches that are in the first tree but not the second
+            std::cout << "Branches in " << filename1 << " but not in " << filename2 << ":" << std::endl;
+            for (const auto& branch : branches1) {
+                if (branches2.find(branch) == branches2.end()) {
+                    std::cout << "\"" << branch << "\" ";
+                }
+            }
+            std::cout << endl;
+            // Print branches that are in the second tree but not the first
+            std::cout << "Branches in " << filename2 << " but not in " << filename1 << ":" << std::endl;
+            for (const auto& branch : branches2) {
+                if (branches1.find(branch) == branches1.end()) {
+                    std::cout << "\"" << branch << "\" ";
+                }
+            }
+            return;
+        }
     }
+    
 
     // Create a main frame
     fMain = new TGMainFrame(p, w, h);
@@ -636,7 +645,7 @@ MyMainFrame::~MyMainFrame() {
    }
 }
 
-void tandemGUI(const char* filename1, const char* filename2) {
+void tandemGUI(const char* filename1, const char* filename2, const char* opt = nullptr) {
    // Popup the GUI with the given ROOT file...
-   new MyMainFrame(gClient->GetRoot(), 600, 600, filename1, filename2);
+   new MyMainFrame(gClient->GetRoot(), 600, 600, filename1, filename2, opt);
 }
