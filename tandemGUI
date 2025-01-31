@@ -20,6 +20,7 @@ private:
     TGMainFrame         *fMain;
     TRootEmbeddedCanvas *fEcanvas;
     TRootEmbeddedCanvas *fEcanvas2;
+    TCanvas             *fCanvas;
     TGComboBox          *fComboBox;  // Drop-down list for Branch names
     TGComboBox          *fXComboBox;  // Drop-down list for Branch names
     TGComboBox          *fCutComboBox; // Drop-down list for "Branch to cut on"
@@ -150,31 +151,39 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     // Create a vertical frame to hold the label and canvas
     TGVerticalFrame *vframe1 = new TGVerticalFrame(hframe);
 
+    // Create a horizontal frame to hold the canvas labels (above the pads)
+    TGHorizontalFrame *labelFrame = new TGHorizontalFrame(vframe1, w, 5);  // Adjust the height of the label frame as needed
+
     // canvas label
-    TGLabel *canvasLabel1 = new TGLabel(vframe1, filename1);
-    vframe1->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5));
+    TGHorizontalFrame *labelFrame1 = new TGHorizontalFrame(labelFrame, w / 2, 5);  // Width is half of the canvas width
+    TGLabel *canvasLabel1 = new TGLabel(labelFrame1, filename1);
+    labelFrame1->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 5, 5, 5, 1));
+
+    // canvas label
+    TGHorizontalFrame *labelFrame2 = new TGHorizontalFrame(labelFrame, w / 2, 5);  // Width is half of the canvas width
+    TGLabel *canvasLabel2 = new TGLabel(labelFrame2, filename2);
+    labelFrame2->AddFrame(canvasLabel2, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 5, 5, 5, 1));
+
+    // Add the label frame (containing both labelFrame1 and labelFrame2) above the canvas
+    labelFrame->AddFrame(labelFrame1, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+    labelFrame->AddFrame(labelFrame2, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Add the label frame to the vertical frame (which will hold the canvas and labels)
+    vframe1->AddFrame(labelFrame, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
 
     // Create canvas widget (on the left)
-    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", vframe1, 700, 700);
+    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", vframe1, 1400, 700);
     vframe1->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5)); // Canvas with all margins
 
+    // Split canvas into two pads
+    fCanvas = fEcanvas->GetCanvas();
+    fCanvas->Divide(2, 1);
+
     // Add canvas1 and label1 to hframe
-    hframe->AddFrame(vframe1, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5)); // Vertical frame in the main frame
+    hframe->AddFrame(vframe1, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsTop | kLHintsLeft, 5, 5, 5, 5)); // Vertical frame in the main frame
 
     // Create a vertical frame to hold the label and canvas
     TGVerticalFrame *vframe2 = new TGVerticalFrame(hframe);
-
-    // canvas label
-    TGLabel *canvasLabel2 = new TGLabel(vframe2, filename2);
-    vframe2->AddFrame(canvasLabel2, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5));
-
-    // Create canvas widget (on the left)
-    fEcanvas2 = new TRootEmbeddedCanvas("Ecanvas2", vframe2, 700, 700);
-    vframe2->AddFrame(fEcanvas2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5)); // Canvas with all margins
-
-    // Add canvas1 and label1 to hframe
-    hframe->AddFrame(vframe2, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5)); // Vertical frame in the main frame
-
 
     // Create a vertical frame for buttons and drop-down list (on the right)
     TGVerticalFrame *vframe = new TGVerticalFrame(hframe, 200, 140);
@@ -513,8 +522,6 @@ void MyMainFrame::DoDraw() {
        drawTitle += branchName.c_str();
        drawTitle += ":";
        drawTitle += Form("%s",Xbranch->GetName());
-       fEcanvas->GetCanvas()->SetLogz();
-       fEcanvas2->GetCanvas()->SetLogz();
    }
 
    TString drawCondition = "";
@@ -576,47 +583,51 @@ void MyMainFrame::DoDraw() {
    std::cout << "Draw stlye: " << drawStyle.Data() << std::endl;
    std::cout << "Draw title: " << drawTitle << std::endl;
 
-   // Now, draw the histogram 1
-   fEcanvas->GetCanvas()->cd();  // Ensure we are drawing on the right pad
+    // Clear each pad before drawing new histograms
+    // Extended comment: The method below works because histograms being initliasied 
+    // and assigned for each branch on the tree rather than drawing the tree straight 
+    // to the canvas, this allows for interactivity of both graphs after they are plotted.
+    fCanvas->Clear();  // Clear the canvas to reset any changes
+    fCanvas->Divide(2, 1);  // Restore original pad layout (2 pads side-by-side)
+    
+    fCanvas->cd(1);
+    gPad->Clear();
+    gPad->SetLogz();
 
-   // Clear previous drawing on the canvas to avoid overlapping plots
-   fEcanvas->GetCanvas()->Clear();
+    fCanvas->cd(2);
+    gPad->Clear();
+    gPad->SetLogz();
 
-   // Draw the histogram with the constructed condition
-   fTree->Draw(drawCommand.c_str(),drawCondition,drawStyle);
+    // Defining and drawing first tree histogram
+    fTree->Draw(drawCommand.c_str(),drawCondition,drawStyle);
+    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
+        TH1F *hist1 = (TH1F*)gDirectory->Get("hist");
+        hist1->SetTitle(drawTitle.c_str());
+        fCanvas->cd(1);
+        hist1->Draw();
+    } else {
+        TH2F *hist1 = (TH2F*)gDirectory->Get("hist");
+        hist1->SetTitle(drawTitle.c_str());
+        fCanvas->cd(1);
+        hist1->Draw();
+    }
 
-   // Get histogram
-   if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
-       TH1F *hist = (TH1F*)gDirectory->Get("hist");
-       hist->SetTitle(drawTitle.c_str());
-   } else {
-       TH2F *hist = (TH2F*)gDirectory->Get("hist");
-       hist->SetTitle(drawTitle.c_str());
-   }
+    // Defining and drawing second tree histogram
+    fTree2->Draw(drawCommand.c_str(),drawCondition,drawStyle);
+    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
+        TH1F *hist2 = (TH1F*)gDirectory->Get("hist");
+        hist2->SetTitle(drawTitle.c_str());
+        fCanvas->cd(2);
+        hist2->Draw();
+    } else {
+        TH2F *hist2 = (TH2F*)gDirectory->Get("hist");
+        hist2->SetTitle(drawTitle.c_str());
+        fCanvas->cd(2);
+        hist2->Draw();
+    }
 
-   // Update the canvas to reflect the new drawing
-   fEcanvas->GetCanvas()->Update();
-
-   // Now, draw the histogram 2
-   fEcanvas2->GetCanvas()->cd();  // Ensure we are drawing on the right pad
-
-   // Clear previous drawing on the canvas to avoid overlapping plots
-   fEcanvas2->GetCanvas()->Clear();
-
-   // Draw the histogram with the constructed condition
-   fTree2->Draw(drawCommand.c_str(),drawCondition,drawStyle);
-
-   // Get histogram 2
-   if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
-       TH1F *hist2 = (TH1F*)gDirectory->Get("hist");
-       hist2->SetTitle(drawTitle.c_str());
-   } else {
-       TH2F *hist2 = (TH2F*)gDirectory->Get("hist");
-       hist2->SetTitle(drawTitle.c_str());
-   }
-
-   // Update the canvas to reflect the new drawing
-   fEcanvas2->GetCanvas()->Update();
+    // Update the canvas to display the histograms
+    fCanvas->Update();
 
 }
 
@@ -645,7 +656,7 @@ MyMainFrame::~MyMainFrame() {
    }
 }
 
-void tandemGUI(const char* filename1, const char* filename2, const char* opt = nullptr) {
+void tandemGUI_v1(const char* filename1, const char* filename2, const char* opt = "") {
    // Popup the GUI with the given ROOT file...
-   new MyMainFrame(gClient->GetRoot(), 600, 600, filename1, filename2, opt);
+   new MyMainFrame(gClient->GetRoot(), 1400, 700, filename1, filename2, opt);
 }
