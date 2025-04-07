@@ -1,0 +1,414 @@
+#include <TGClient.h>
+#include <TCanvas.h>
+#include <TH1F.h>  // Include header for histograms
+#include <TRandom.h>
+#include <TGButton.h>
+#include <TGFrame.h>
+#include <TGComboBox.h>
+#include <TRootEmbeddedCanvas.h>
+#include <RQ_OBJECT.h>
+#include <TFile.h>
+#include <TTree.h>
+#include <TGNumberEntry.h>  // Include for number entry widgets
+#include <TGLabel.h>  // Include for label widget
+
+class MyMainFrame {
+    RQ_OBJECT("MyMainFrame")
+private:
+    TGMainFrame         *fMain;
+    TRootEmbeddedCanvas *fEcanvas;
+    TGComboBox          *fFirstComboBox;  // Drop-down list for Branch names
+    TGComboBox          *fSecondComboBox;  // Drop-down list for Branch names
+    TGComboBox          *fThirdComboBox; // Drop-down list for "Branch to cut on"
+    TGComboBox          *fFourthComboBox; // New drop-down for second condition branch
+    TGComboBox          *fFifthComboBox; // Third drop-down for branch to apply to (added missing combo box)
+    TGComboBox          *fSixthComboBox; // Fourth drop-down for branch to apply to (added missing combo box)
+    TGNumberEntry       *fBinsEntry;  // Number of bins input
+    TGNumberEntry       *fMinXEntry;  // Minimum X input
+    TGNumberEntry       *fMaxXEntry;  // Maximum X input
+    TFile               *fFile;       // ROOT file pointer
+    TTree               *fTree;       // TTree pointer
+    Int_t               fSelectedBranch; // Store selected branch index
+public:
+    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* filename);
+    virtual ~MyMainFrame();
+    void DoDraw();
+    void OnSelect(Int_t id);
+};
+
+MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* filename) 
+    : fSelectedBranch(-1) {  // Initialize fSelectedBranch to -1 (no selection initially)
+
+    // Open the ROOT file
+    fFile = TFile::Open(filename);
+    if (!fFile || !fFile->IsOpen()) {
+        Error("MyMainFrame", "Failed to open file: %s", filename);
+        return;
+    }
+
+    // Get the TTree from the file (assuming the TTree is named "tree")
+    fTree = (TTree*)fFile->Get(fFile->GetListOfKeys()->At(0)->GetName());
+    if (!fTree) {
+        Error("MyMainFrame", "Failed to find TTree named 'tree' in the file.");
+        return;
+    }
+
+    // Create a main frame
+    fMain = new TGMainFrame(p, w, h);
+
+    // Create a horizontal frame to hold the canvas and widgets side by side
+    TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain, w, h);
+
+    // Create a vertical frame to hold the label and canvas
+    TGVerticalFrame *vframe1 = new TGVerticalFrame(hframe);
+
+    // canvas label
+    TGLabel *canvasLabel1 = new TGLabel(vframe1, filename);
+    vframe1->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5));
+
+    // Create canvas widget (on the left)
+    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", vframe1, 700, 700);
+    vframe1->AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5, 5, 5, 5)); // Canvas with all margins
+
+    // Add canvas1 and label1 to hframe
+    hframe->AddFrame(vframe1, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5)); // Vertical frame in the main frame
+
+    // Create a vertical frame for buttons and drop-down list (on the right)
+    TGVerticalFrame *vframe = new TGVerticalFrame(hframe, 200, 140);
+
+    // Create and add the Exit button at the top (before all other widgets)
+    TGTextButton *exit = new TGTextButton(vframe, "&Exit", "gApplication->Terminate(0)");
+    vframe->AddFrame(exit, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
+
+    // Create a vertical frame for the labels and combo boxes (Branch name and Branch to cut on)
+    TGVerticalFrame *comboFrame = new TGVerticalFrame(vframe, 200, 60);
+
+    // "Branch name:" label and ComboBox
+    TGLabel *branchLabel = new TGLabel(comboFrame, "Branch 1:");
+    comboFrame->AddFrame(branchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fFirstComboBox = new TGComboBox(comboFrame, "Select branch", 50);
+    fFirstComboBox->Select(1); // Default selection (1)
+    fFirstComboBox->Connect("Selected(Int_t)", "MyMainFrame", this, "OnSelect(Int_t)");
+    fFirstComboBox->Resize(200, 25);
+    comboFrame->AddFrame(fFirstComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    vframe->AddFrame(comboFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
+
+    // Now add the number entry widgets (Bins, Min x, Max x) between the two combo boxes
+
+    // Create a horizontal frame for the three input boxes (Bins, Min x, Max x)
+    TGHorizontalFrame *hInputFrame = new TGHorizontalFrame(vframe, 200, 120);
+
+    // Bins label and input box
+    TGVerticalFrame *binsFrame = new TGVerticalFrame(hInputFrame, 60, 60);
+    TGLabel *binsLabel = new TGLabel(binsFrame, "Bins:");
+    binsFrame->AddFrame(binsLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+    fBinsEntry = new TGNumberEntry(binsFrame, 100, 5, -1, TGNumberFormat::kNESInteger, TGNumberFormat::kNEAAnyNumber);
+    fBinsEntry->SetWidth(60);
+    binsFrame->AddFrame(fBinsEntry, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    hInputFrame->AddFrame(binsFrame, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    // Min x label and input box
+    TGVerticalFrame *minXFrame = new TGVerticalFrame(hInputFrame, 60, 60);
+    TGLabel *minXLabel = new TGLabel(minXFrame, "Min x:");
+    minXFrame->AddFrame(minXLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+    fMinXEntry = new TGNumberEntry(minXFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fMinXEntry->SetWidth(60);
+    minXFrame->AddFrame(fMinXEntry, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    hInputFrame->AddFrame(minXFrame, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    // Max x label and input box
+    TGVerticalFrame *maxXFrame = new TGVerticalFrame(hInputFrame, 60, 60);
+    TGLabel *maxXLabel = new TGLabel(maxXFrame, "Max x:");
+    maxXFrame->AddFrame(maxXLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+    fMaxXEntry = new TGNumberEntry(maxXFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fMaxXEntry->SetWidth(60);
+    maxXFrame->AddFrame(fMaxXEntry, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    hInputFrame->AddFrame(maxXFrame, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    vframe->AddFrame(hInputFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
+
+
+    // Add second combo box
+    TGVerticalFrame *XcomboFrame = new TGVerticalFrame(vframe, 200, 60);
+
+    // "Branch name:" label and ComboBox
+    TGLabel *XbranchLabel = new TGLabel(XcomboFrame, "Branch 2:");
+    XcomboFrame->AddFrame(XbranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fSecondComboBox = new TGComboBox(XcomboFrame, "Select branch", 50);
+    fSecondComboBox->Select(1); // Default selection (1)
+    //fSecondComboBox->Connect("Selected(Int_t)", "MyMainFrame", this, "OnXSelect(Int_t)");
+    fSecondComboBox->Resize(200, 25);
+    XcomboFrame->AddFrame(fSecondComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    vframe->AddFrame(XcomboFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
+
+    // Add the third combo box
+    TGVerticalFrame *cutComboFrame = new TGVerticalFrame(vframe, 200, 60);
+
+    // Third branch label label and ComboBox
+    TGLabel *cutLabel = new TGLabel(cutComboFrame, "Branch 3:");
+    cutComboFrame->AddFrame(cutLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fThirdComboBox = new TGComboBox(cutComboFrame, "Select branch", 50); // Drop-down for cutting
+    fThirdComboBox->Select(1); // Default selection (1)
+    //fThirdComboBox->Connect("Selected(Int_t)", "MyMainFrame", this, "OnSelect(Int_t)");
+    fThirdComboBox->Resize(200, 25);
+    cutComboFrame->AddFrame(fThirdComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    vframe->AddFrame(cutComboFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
+
+    // Add the fourth combo box
+    TGVerticalFrame *secondConditionFrame = new TGVerticalFrame(vframe, 200, 60);
+
+    // Add the fourth branch label 
+    TGLabel *secondBranchLabel = new TGLabel(secondConditionFrame, "Branch 4:");
+    secondConditionFrame->AddFrame(secondBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fFourthComboBox = new TGComboBox(secondConditionFrame, "Select branch", 50);
+    fFourthComboBox->Resize(200, 25);
+    secondConditionFrame->AddFrame(fFourthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    
+    vframe->AddFrame(secondConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Add fifth combo box
+    TGVerticalFrame *branchInputFrame = new TGVerticalFrame(vframe, 200, 100);
+
+    // Add fifth branch label
+    TGLabel *branchInputLabel = new TGLabel(branchInputFrame, "Branch 5:");
+    branchInputFrame->AddFrame(branchInputLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fFifthComboBox = new TGComboBox(branchInputFrame, "Select branch", 50);
+    fFifthComboBox->Resize(200, 25);
+    branchInputFrame->AddFrame(fFifthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    // Add the new frame to the main vertical frame (vframe)
+    vframe->AddFrame(branchInputFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Add sixth combo box
+    TGVerticalFrame *fourthConditionFrame = new TGVerticalFrame(vframe, 200, 100);
+
+    // Add sixth label and ComboBox
+    TGLabel *fourthBranchLabel = new TGLabel(fourthConditionFrame, "Sixth branch:");
+    fourthConditionFrame->AddFrame(fourthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+
+    fSixthComboBox = new TGComboBox(fourthConditionFrame, "Select branch", 50);
+    fSixthComboBox->Resize(200, 25);
+    fourthConditionFrame->AddFrame(fSixthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+
+    // Add the new frame to the main vertical frame (vframe)
+    vframe->AddFrame(fourthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Add the Draw button (already present)
+    TGTextButton *draw = new TGTextButton(vframe, "&Draw");
+    draw->Connect("Clicked()", "MyMainFrame", this, "DoDraw()"); 
+    vframe->AddFrame(draw, new TGLayoutHints(kLHintsCenterX, 10, 5, 10, 5));
+
+    hframe->AddFrame(vframe, new TGLayoutHints(kLHintsCenterY, 2, 2, 2, 2));
+
+    fMain->AddFrame(hframe, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+    // Set a name to the main frame
+    fMain->SetWindowName("TTree Branch Selector");
+
+    // Add "None" branch to X drop down list
+    fSecondComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fThirdComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fFourthComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fFifthComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fSixthComboBox->AddEntry("None", 0); // Add "None" branch in first place
+
+    // Populate the ComboBoxes with branch names
+    if (fTree) {
+       TObjArray *branches = fTree->GetListOfBranches();
+       for (int i = 0; i < branches->GetEntries(); i++) {
+          TBranch *branch = (TBranch*)branches->At(i);
+          fFirstComboBox->AddEntry(branch->GetName(), i+1); // Add branches to ComboBox (index + 1)
+          fSecondComboBox->AddEntry(branch->GetName(), i + 1); // Add branches to ComboBox (index + 1)
+          fThirdComboBox->AddEntry(branch->GetName(), i + 1); // Populate the cut ComboBox as well
+          fFourthComboBox->AddEntry(branch->GetName(), i + 1); // Populate the second condition ComboBox
+          fFifthComboBox->AddEntry(branch->GetName(), i + 1); // Add branches to ComboBox
+          fSixthComboBox->AddEntry(branch->GetName(), i + 1); // Add branches to ComboBox
+       }
+    }
+
+    // Map all subwindows of main frame
+    fMain->MapSubwindows();
+
+    // Initialize the layout algorithm
+    fMain->Resize(fMain->GetDefaultSize());
+
+    // Map main frame
+    fMain->MapWindow();
+
+}
+
+
+void MyMainFrame::DoDraw() {
+   if (fSelectedBranch == -1) {
+       Error("DoDraw", "No branch selected.");
+       return;
+   }
+
+   // Get the branch corresponding to the selected option
+   TBranch *branch = (TBranch*)fTree->GetListOfBranches()->At(fSelectedBranch - 1);
+   if (!branch) {
+       Error("DoDraw", "Invalid branch selection.");
+       return;
+   }
+   string branchName = branch->GetName();
+
+   // Retrieve the number of bins, min and max X values from the input boxes
+   Int_t nBins = fBinsEntry->GetNumber();
+   Double_t minX = fMinXEntry->GetNumber();
+   Double_t maxX = fMaxXEntry->GetNumber();
+
+   // Draw commands
+   std::string drawCommand1 = "";
+   TString drawStyle1 = "";
+   std::string drawTitle1 = "";
+   std::string drawCommand2 = "";
+   TString drawStyle2 = "same";
+   std::string drawTitle2 = "";
+   std::string drawCommand3 = "";
+   TString drawStyle3 = "same";
+   std::string drawTitle3 = "";
+   std::string drawCommand4 = "";
+   TString drawStyle4 = "same";
+   std::string drawTitle4 = "";
+   std::string drawCommand5 = "";
+   TString drawStyle5 = "same";
+   std::string drawTitle5 = "";
+   std::string drawCommand6 = "";
+   TString drawStyle6 = "same";
+   std::string drawTitle6 = "";
+
+   // Build draw command for the first histogram
+   drawCommand1 = TString::Format("%s>>hist1(%d,%f,%f)", branchName.c_str(), nBins, minX, maxX);
+   drawTitle1 = branchName.c_str();
+
+   // Apply conditions for other histograms
+   Int_t SecondIndex = fSecondComboBox->GetSelected();
+   if (SecondIndex > 0) {
+       TBranch *SecondBranch = (TBranch*)fTree->GetListOfBranches()->At(SecondIndex - 1);
+       drawCommand2 = TString::Format("%s>>hist2(%d,%f,%f)", SecondBranch->GetName(), nBins, minX, maxX);
+       drawTitle2 = SecondBranch->GetName();
+   }
+
+   Int_t ThirdIndex = fThirdComboBox->GetSelected();
+   if (ThirdIndex > 0) {
+       TBranch *ThirdBranch = (TBranch*)fTree->GetListOfBranches()->At(ThirdIndex - 1);
+       drawCommand3 = TString::Format("%s>>hist3(%d,%f,%f)", ThirdBranch->GetName(), nBins, minX, maxX);
+       drawTitle3 = ThirdBranch->GetName();
+   }
+
+   Int_t FourthIndex = fFourthComboBox->GetSelected();
+   if (FourthIndex > 0) {
+       TBranch *FourthBranch = (TBranch*)fTree->GetListOfBranches()->At(FourthIndex - 1);
+       drawCommand4 = TString::Format("%s>>hist4(%d,%f,%f)", FourthBranch->GetName(), nBins, minX, maxX);
+       drawTitle4 = FourthBranch->GetName();
+   }
+
+   Int_t FifthIndex = fFifthComboBox->GetSelected();
+   if (FifthIndex > 0) {
+       TBranch *FifthBranch = (TBranch*)fTree->GetListOfBranches()->At(FifthIndex - 1);
+       drawCommand5 = TString::Format("%s>>hist5(%d,%f,%f)", FifthBranch->GetName(), nBins, minX, maxX);
+       drawTitle5 = FifthBranch->GetName();
+   }
+
+   Int_t SixthIndex = fSixthComboBox->GetSelected();
+   if (SixthIndex > 0) {
+       TBranch *SixthBranch = (TBranch*)fTree->GetListOfBranches()->At(SixthIndex - 1);
+       drawCommand6 = TString::Format("%s>>hist6(%d,%f,%f)", SixthBranch->GetName(), nBins, minX, maxX);
+       drawTitle6 = SixthBranch->GetName();
+   }
+
+   // Clear previous drawing on the canvas
+   fEcanvas->GetCanvas()->cd();
+   fEcanvas->GetCanvas()->Clear();
+
+   // Create a legend in the top-left corner
+   TLegend *legend = new TLegend(0.15, 0.7, 0.4, 0.875);
+
+   // Draw and get histogram 1
+   fTree->Draw(drawCommand1.c_str(), "", drawStyle1);
+   TH1F *hist1g = (TH1F*)gDirectory->Get("hist1");
+   hist1g->SetTitle(drawTitle1.c_str());
+   hist1g->SetLineColor(kBlack);
+   legend->AddEntry(hist1g, drawTitle1.c_str(), "l");
+
+   // Draw and get histogram 2
+   if (SecondIndex > 0) {
+       fTree->Draw(drawCommand2.c_str(), "", drawStyle2);
+       TH1F *hist2g = (TH1F*)gDirectory->Get("hist2");
+       hist2g->SetTitle(drawTitle2.c_str());
+       hist2g->SetLineColor(kRed);
+       legend->AddEntry(hist2g, drawTitle2.c_str(), "l");
+   }
+
+   // Draw and get histogram 3
+   if (ThirdIndex > 0) {
+       fTree->Draw(drawCommand3.c_str(), "", drawStyle3);
+       TH1F *hist3g = (TH1F*)gDirectory->Get("hist3");
+       hist3g->SetTitle(drawTitle3.c_str());
+       hist3g->SetLineColor(kBlue);
+       legend->AddEntry(hist3g, drawTitle3.c_str(), "l");
+   }
+
+   // Draw and get histogram 4
+   if (FourthIndex > 0) {
+       fTree->Draw(drawCommand4.c_str(), "", drawStyle4);
+       TH1F *hist4g = (TH1F*)gDirectory->Get("hist4");
+       hist4g->SetTitle(drawTitle4.c_str());
+       hist4g->SetLineColor(kGreen);
+       legend->AddEntry(hist4g, drawTitle4.c_str(), "l");
+   }
+
+   // Draw and get histogram 5
+   if (FifthIndex > 0) {
+       fTree->Draw(drawCommand5.c_str(), "", drawStyle5);
+       TH1F *hist5g = (TH1F*)gDirectory->Get("hist5");
+       hist5g->SetTitle(drawTitle5.c_str());
+       hist5g->SetLineColor(kMagenta);
+       legend->AddEntry(hist5g, drawTitle5.c_str(), "l");
+   }
+
+   // Draw and get histogram 6
+   if (SixthIndex > 0) {
+       fTree->Draw(drawCommand6.c_str(), "", drawStyle6);
+       TH1F *hist6g = (TH1F*)gDirectory->Get("hist6");
+       hist6g->SetTitle(drawTitle6.c_str());
+       hist6g->SetLineColor(kOrange);
+       legend->AddEntry(hist6g, drawTitle6.c_str(), "l");
+   }
+
+   // Draw the legend
+   legend->Draw();
+
+   // Update the canvas to reflect the new drawing
+   fEcanvas->GetCanvas()->Update();
+}
+
+
+void MyMainFrame::OnSelect(Int_t id) {
+   fSelectedBranch = id;
+
+}
+
+
+MyMainFrame::~MyMainFrame() {
+   // Clean up used widgets: frames, buttons, layout hints
+   fMain->Cleanup();
+   delete fMain;
+   if (fFile) {
+      fFile->Close();
+      delete fFile;
+   }
+}
+
+void multiGUI(const char* filename) {
+   // Popup the GUI with the given ROOT file...
+   new MyMainFrame(gClient->GetRoot(), 1000, 800, filename);
+}
