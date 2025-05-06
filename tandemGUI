@@ -483,108 +483,131 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
 
 void MyMainFrame::DoDraw() {
 
-   // Retrieve the selected branch from the first combo box (branch to draw)
-   if (fSelectedBranch == -1) {
-      Error("DoDraw", "No branch selected.");
-      return;
-   }
+    // Retrieve the selected branch from the first combo box (branch to draw)
+    if (fSelectedBranch == -1) {
+        Error("DoDraw", "No branch selected.");
+        return;
+    }
 
-   // Get the branch corresponding to the selected option
-   TBranch *branch = (TBranch*)fTree->GetListOfBranches()->At(fSelectedBranch - 1); // fSelectedBranch is 1-based
-   if (!branch) {
-      Error("DoDraw", "Invalid branch selection.");
-      return;
-   }
-   string branchName = branch->GetName();
-   
-   // Retrieve the number of bins, min and max X values from the input boxes
-   Int_t nBins = fBinsEntry->GetNumber();
-   Double_t minX = fMinXEntry->GetNumber();
-   Double_t maxX = fMaxXEntry->GetNumber();
+    // Get the branch corresponding to the selected option
+    TBranch *branch = (TBranch*)fTree->GetListOfBranches()->At(fSelectedBranch - 1); // fSelectedBranch is 1-based
+    if (!branch) {
+        Error("DoDraw", "Invalid branch selection.");
+        return;
+    }
+    string branchName = branch->GetName();
 
-   // Retrieve the number of bins, min and max X values from the input boxes for X
-   Int_t XnBins = fXBinsEntry->GetNumber();
-   Double_t XminX = fXMinXEntry->GetNumber();
-   Double_t XmaxX = fXMaxXEntry->GetNumber();
+    // Retrieve the number of bins, min and max X values from the input boxes
+    Int_t nBins = fBinsEntry->GetNumber();
+    Double_t minX = fMinXEntry->GetNumber();
+    Double_t maxX = fMaxXEntry->GetNumber();
 
-   std::string drawCommand = "";
-   TString drawStyle = "";
-   std::string drawTitle = "";
+    // Retrieve the number of bins, min and max X values from the input boxes for X
+    Int_t XnBins = fXBinsEntry->GetNumber();
+    Double_t XminX = fXMinXEntry->GetNumber();
+    Double_t XmaxX = fXMaxXEntry->GetNumber();
 
-   // Build the draw command for 1D or 2D histogram with custom range, bins, and condition
-   if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
-       drawCommand = TString::Format("%s>>hist(%d,%f,%f)", branchName.c_str(), nBins, minX, maxX);
-       drawTitle += branchName.c_str();
-   } else {
-       TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
-       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", branchName.c_str(), Xbranch->GetName(), XnBins, XminX, XmaxX, nBins, minX, maxX);
-       drawStyle = "COLZ";
-       drawTitle += branchName.c_str();
-       drawTitle += ":";
-       drawTitle += Form("%s",Xbranch->GetName());
-   }
+    std::string drawCommand1 = "";
+    std::string drawCommand2 = "";
+    TString drawStyle = "";
+    std::string drawTitle = "";
 
-   TString drawCondition = "";
+    // Extract file names for titles
+    std::string file1Title = fFile1->GetName();
+    std::string file2Title = fFile2->GetName();
 
-   // Apply first condition (cut on selected branch)
-   Int_t cutIndex = fCutComboBox->GetSelected();
-   if (cutIndex > 0) {
-      TBranch *cutBranch = (TBranch*)fTree->GetListOfBranches()->At(cutIndex - 1);
-      Double_t cutMin = fMinInput->GetNumber();
-      Double_t cutMax = fMaxInput->GetNumber();
-      drawCondition += Form("%s > %.10g && %s < %.10g", cutBranch->GetName(), cutMin, cutBranch->GetName(), cutMax);
-      drawTitle += Form(", %s[%.10g,%.10g]",cutBranch->GetName(), cutMin, cutMax);  
-   }
+    // Remove .root extension if present
+    if (file1Title.find(".root") != std::string::npos) {
+        file1Title = file1Title.substr(0, file1Title.find(".root"));
+    }
+    if (file2Title.find(".root") != std::string::npos) {
+        file2Title = file2Title.substr(0, file2Title.find(".root"));
+    }
 
-   // Apply second condition if selected
-   Int_t secondCutIndex = fSecondComboBox->GetSelected();
-   if (secondCutIndex > 0) {
-      if (cutIndex > 0){
-        drawCondition += " && ";
-      }
-      TBranch *secondCutBranch = (TBranch*)fTree->GetListOfBranches()->At(secondCutIndex - 1);
-      Double_t secondCutMin = fSecondMinInput->GetNumber();
-      Double_t secondCutMax = fSecondMaxInput->GetNumber();
-      drawCondition += Form("%s > %.10g && %s < %.10g", secondCutBranch->GetName(), secondCutMin, secondCutBranch->GetName(), secondCutMax);
-      drawTitle += Form(", %s[%.10g,%.10g]",secondCutBranch->GetName(), secondCutMin, secondCutMax);
-   }
+    // Keep only the rightmost part after the last /
+    if (file1Title.find_last_of("/") != std::string::npos) {
+        file1Title = file1Title.substr(file1Title.find_last_of("/") + 1);
+    }
+    if (file2Title.find_last_of("/") != std::string::npos) {
+        file2Title = file2Title.substr(file2Title.find_last_of("/") + 1);
+    }
 
-   // Apply third condition if selected 
-   Int_t branchInputIndex = fThirdComboBox->GetSelected();
-   if (branchInputIndex > 0) {
-      if (secondCutIndex > 0 || cutIndex > 0){
-        drawCondition += " && ";
-      }
-      TBranch *branchInput = (TBranch*)fTree->GetListOfBranches()->At(branchInputIndex - 1);
-      Double_t branchMin = fThirdMinInput->GetNumber();
-      Double_t branchMax = fThirdMaxInput->GetNumber();
-      drawCondition += Form("%s > %.10g && %s < %.10g", branchInput->GetName(), branchMin, branchInput->GetName(), branchMax);
-      drawTitle += Form(", %s[%.10g,%.10g]",branchInput->GetName(), branchMin, branchMax);
-   }
-
-   // Apply fourth condition if selected 
-   Int_t fourthCutIndex = fFourthComboBox->GetSelected();
-   if (fourthCutIndex > 0) {
-      if (branchInputIndex > 0 || secondCutIndex > 0 || cutIndex > 0){
-        drawCondition += " && ";
-      }
-      TBranch *fourthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(fourthCutIndex - 1);
-      Double_t fourthCutMin = fFourthMinInput->GetNumber();
-      Double_t fourthCutMax = fFourthMaxInput->GetNumber();
-      drawCondition += Form("%s > %.10g && %s < %.10g", fourthCutBranch->GetName(), fourthCutMin, fourthCutBranch->GetName(), fourthCutMax);
-      drawTitle += Form(", %s[%.10g,%.10g]",fourthCutBranch->GetName(), fourthCutMin, fourthCutMax);
-   }
-
-
-   // Debug print: Check the draw strings
-   std::cout << "////////  Drawn with following  ////////" << std::endl;
-   //std::cout << "Draw command: " << drawCommand.Data() << std::endl;
-   std::cout << "Draw condition: " << drawCondition.Data() << std::endl;
-   std::cout << "Draw stlye: " << drawStyle.Data() << std::endl;
-   std::cout << "Draw title: " << drawTitle << std::endl;
-
+    // Build the draw commands for 1D or 2D histograms with custom range, bins, and condition
+    if (fXComboBox->GetSelected() == -1 || fXComboBox->GetSelected() == 0) {
+        drawCommand1 = TString::Format("%s>>hist1(%d,%f,%f)", branchName.c_str(), nBins, minX, maxX);
+        drawCommand2 = TString::Format("%s>>hist2(%d,%f,%f)", branchName.c_str(), nBins, minX, maxX);
+        drawTitle += branchName.c_str();
+    } else {
+        TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
+        drawCommand1 = TString::Format("%s:%s>>hist1(%d,%f,%f,%d,%f,%f)", branchName.c_str(), Xbranch->GetName(), XnBins, XminX, XmaxX, nBins, minX, maxX);
+        drawCommand2 = TString::Format("%s:%s>>hist2(%d,%f,%f,%d,%f,%f)", branchName.c_str(), Xbranch->GetName(), XnBins, XminX, XmaxX, nBins, minX, maxX);
+        drawStyle = "COLZ";
+        drawTitle += branchName.c_str();
+        drawTitle += ":";
+        drawTitle += Form("%s", Xbranch->GetName());
+    }
+ 
+    TString drawCondition = "";
+ 
+    // Apply first condition (cut on selected branch)
+    Int_t cutIndex = fCutComboBox->GetSelected();
+    if (cutIndex > 0) {
+       TBranch *cutBranch = (TBranch*)fTree->GetListOfBranches()->At(cutIndex - 1);
+       Double_t cutMin = fMinInput->GetNumber();
+       Double_t cutMax = fMaxInput->GetNumber();
+       drawCondition += Form("%s > %.10g && %s < %.10g", cutBranch->GetName(), cutMin, cutBranch->GetName(), cutMax);
+       drawTitle += Form(", %s[%.10g,%.10g]", cutBranch->GetName(), cutMin, cutMax);  
+    }
+ 
+    // Apply second condition if selected
+    Int_t secondCutIndex = fSecondComboBox->GetSelected();
+    if (secondCutIndex > 0) {
+       if (cutIndex > 0) {
+         drawCondition += " && ";
+       }
+       TBranch *secondCutBranch = (TBranch*)fTree->GetListOfBranches()->At(secondCutIndex - 1);
+       Double_t secondCutMin = fSecondMinInput->GetNumber();
+       Double_t secondCutMax = fSecondMaxInput->GetNumber();
+       drawCondition += Form("%s > %.10g && %s < %.10g", secondCutBranch->GetName(), secondCutMin, secondCutBranch->GetName(), secondCutMax);
+       drawTitle += Form(", %s[%.10g,%.10g]", secondCutBranch->GetName(), secondCutMin, secondCutMax);
+    }
+ 
+    // Apply third condition if selected 
+    Int_t branchInputIndex = fThirdComboBox->GetSelected();
+    if (branchInputIndex > 0) {
+       if (secondCutIndex > 0 || cutIndex > 0) {
+         drawCondition += " && ";
+       }
+       TBranch *branchInput = (TBranch*)fTree->GetListOfBranches()->At(branchInputIndex - 1);
+       Double_t branchMin = fThirdMinInput->GetNumber();
+       Double_t branchMax = fThirdMaxInput->GetNumber();
+       drawCondition += Form("%s > %.10g && %s < %.10g", branchInput->GetName(), branchMin, branchInput->GetName(), branchMax);
+       drawTitle += Form(", %s[%.10g,%.10g]", branchInput->GetName(), branchMin, branchMax);
+    }
+ 
+    // Apply fourth condition if selected 
+    Int_t fourthCutIndex = fFourthComboBox->GetSelected();
+    if (fourthCutIndex > 0) {
+       if (branchInputIndex > 0 || secondCutIndex > 0 || cutIndex > 0) {
+         drawCondition += " && ";
+       }
+       TBranch *fourthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(fourthCutIndex - 1);
+       Double_t fourthCutMin = fFourthMinInput->GetNumber();
+       Double_t fourthCutMax = fFourthMaxInput->GetNumber();
+       drawCondition += Form("%s > %.10g && %s < %.10g", fourthCutBranch->GetName(), fourthCutMin, fourthCutBranch->GetName(), fourthCutMax);
+       drawTitle += Form(", %s[%.10g,%.10g]", fourthCutBranch->GetName(), fourthCutMin, fourthCutMax);
+    }
+ 
+    // Debug print: Check the draw strings
+    std::cout << "////////  Drawn with following  ////////" << std::endl;
+    std::cout << "Draw command 1: " << drawCommand1 << std::endl;
+    std::cout << "Draw command 2: " << drawCommand2 << std::endl;
+    std::cout << "Draw condition: " << drawCondition.Data() << std::endl;
+    std::cout << "Draw style: " << drawStyle.Data() << std::endl;
+    std::cout << "Draw title: " << drawTitle << std::endl;
+ 
     // Clear each pad before drawing new histograms
-    // Extended comment: The method below works because histograms being initliasied 
+    // Extended comment: The method below works because histograms being initialized 
     // and assigned for each branch on the tree rather than drawing the tree straight 
     // to the canvas, this allows for interactivity of both graphs after they are plotted.
     fCanvas->Clear();  // Clear the canvas to reset any changes
@@ -593,42 +616,47 @@ void MyMainFrame::DoDraw() {
     fCanvas->cd(1);
     gPad->Clear();
     gPad->SetLogz();
-
+    gPad->SetLeftMargin(0.125);
+    gPad->SetRightMargin(0.125);
+ 
+    // Defining and drawing first tree histogram
+    fTree->Draw(drawCommand1.c_str(), drawCondition, drawStyle);
+    if (fXComboBox->GetSelected() == -1 || fXComboBox->GetSelected() == 0) {
+        TH1F *hist1 = (TH1F*)gDirectory->Get("hist1");
+        hist1->SetTitle(file1Title.c_str());
+        hist1->GetXaxis()->SetTitle(fComboBox->GetSelectedEntry()->GetTitle());
+        hist1->Draw();
+    } else {
+        TH2F *hist1 = (TH2F*)gDirectory->Get("hist1");
+        hist1->SetTitle(file1Title.c_str());
+        hist1->GetXaxis()->SetTitle(fXComboBox->GetSelectedEntry()->GetTitle());
+        hist1->GetYaxis()->SetTitle(branchName.c_str());
+        hist1->Draw("COLZ");
+    }
+ 
     fCanvas->cd(2);
     gPad->Clear();
     gPad->SetLogz();
-
-    // Defining and drawing first tree histogram
-    fTree->Draw(drawCommand.c_str(),drawCondition,drawStyle);
-    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
-        TH1F *hist1 = (TH1F*)gDirectory->Get("hist");
-        hist1->SetTitle(drawTitle.c_str());
-        fCanvas->cd(1);
-        hist1->Draw();
-    } else {
-        TH2F *hist1 = (TH2F*)gDirectory->Get("hist");
-        hist1->SetTitle(drawTitle.c_str());
-        fCanvas->cd(1);
-        hist1->Draw();
-    }
+    gPad->SetLeftMargin(0.125);
+    gPad->SetRightMargin(0.125);
 
     // Defining and drawing second tree histogram
-    fTree2->Draw(drawCommand.c_str(),drawCondition,drawStyle);
-    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
-        TH1F *hist2 = (TH1F*)gDirectory->Get("hist");
-        hist2->SetTitle(drawTitle.c_str());
-        fCanvas->cd(2);
+    fTree2->Draw(drawCommand2.c_str(), drawCondition, drawStyle);
+    if (fXComboBox->GetSelected() == -1 || fXComboBox->GetSelected() == 0) {
+        TH1F *hist2 = (TH1F*)gDirectory->Get("hist2");
+        hist2->SetTitle(file2Title.c_str());
+        hist2->GetXaxis()->SetTitle(fComboBox->GetSelectedEntry()->GetTitle());
         hist2->Draw();
     } else {
-        TH2F *hist2 = (TH2F*)gDirectory->Get("hist");
-        hist2->SetTitle(drawTitle.c_str());
-        fCanvas->cd(2);
-        hist2->Draw();
+        TH2F *hist2 = (TH2F*)gDirectory->Get("hist2");
+        hist2->SetTitle(file2Title.c_str());
+        hist2->GetXaxis()->SetTitle(fXComboBox->GetSelectedEntry()->GetTitle());
+        hist2->GetYaxis()->SetTitle(branchName.c_str());
+        hist2->Draw("COLZ");
     }
-
+ 
     // Update the canvas to display the histograms
     fCanvas->Update();
-
 }
 
 
