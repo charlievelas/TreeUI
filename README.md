@@ -23,19 +23,19 @@ alias ThreeDGUI="root $TreeUI/ThreeDGUI"
 ## How to run
 All GUIs, except tandemGUI, can be run by doing the following
 
-	[GUI name] /location/of/root/file.root
+    [GUI name] /location/of/root/file.root
 
 For example
 
-	loadGUI /location/of/root/file.root
+    loadGUI /location/of/root/file.root
 
 tandemGUI is an exception due to addtional, optional execution option. 
 
 tandemGUI can be run by
 	
-	root 'tandem("/location/of/root/file1.root","/location/of/root/file2.root")'
+    root 'tandem("/location/of/root/file1.root","/location/of/root/file2.root")'
 
 Both root files must have the same branches. If not, then the override option can be used
 
-	root 'tandem("/location/of/root/file1.root","/location/of/root/file2.root","override")'	
+    root 'tandem("/location/of/root/file1.root","/location/of/root/file2.root","override")'	
 
