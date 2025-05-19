@@ -1,0 +1,18 @@
+All GUIs:
+
+antiConGUI - removes events when conditon variable is within min-max range
+
+antiConSaveGUI - removes events when conditon variable is within min-max range, tree can be saved
+
+fitGUI - can fit 1D histogram with gauss + polynomial function
+
+loadGUI - standard GUI with up to four conditions
+
+multiGUI - allows for mutliple 1D histograms to be plotted on the same canvas with a legend
+
+saveGUI - standard GUI with up to four conditions and tree can be saved
+
+tandemGUI - allows for the same branch from two differnet ROOT files to be plotted side by side with up to four conditions; ROOT files must have same branches, if not then 'override' function can be used
+
+threeDGUI - allows for a 2D histogram to be plotted using a 3D plot
+
