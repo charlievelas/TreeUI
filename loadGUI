@@ -97,10 +97,10 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     TGVerticalFrame *comboFrame = new TGVerticalFrame(vframe, 200, 60);
 
     // "Branch name:" label and ComboBox
-    TGLabel *branchLabel = new TGLabel(comboFrame, "Y branch name:");
+    TGLabel *branchLabel = new TGLabel(comboFrame, "X branch name:");
     comboFrame->AddFrame(branchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
 
-    fComboBox = new TGComboBox(comboFrame, "Select y-axis branch", 50);
+    fComboBox = new TGComboBox(comboFrame, "Select x-axis branch", 50);
     fComboBox->Select(1); // Default selection (1)
     fComboBox->Connect("Selected(Int_t)", "MyMainFrame", this, "OnSelect(Int_t)");
     fComboBox->Resize(200, 25);
@@ -147,10 +147,10 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     TGVerticalFrame *XcomboFrame = new TGVerticalFrame(vframe, 200, 60);
 
     // "Branch name:" label and ComboBox
-    TGLabel *XbranchLabel = new TGLabel(XcomboFrame, "X branch name:");
+    TGLabel *XbranchLabel = new TGLabel(XcomboFrame, "Y branch name:");
     XcomboFrame->AddFrame(XbranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
 
-    fXComboBox = new TGComboBox(XcomboFrame, "Select x-axis branch", 50);
+    fXComboBox = new TGComboBox(XcomboFrame, "Select y-axis branch", 50);
     fXComboBox->Select(1); // Default selection (1)
     fXComboBox->Connect("Selected(Int_t)", "MyMainFrame", this, "OnXSelect(Int_t)");
     fXComboBox->Resize(200, 25);
@@ -529,7 +529,24 @@ MyMainFrame::~MyMainFrame() {
    }
 }
 
-void loadGUI(const char* filename) {
-   // Popup the GUI with the given ROOT file...
-   new MyMainFrame(gClient->GetRoot(), 600, 600, filename);
+void loadGUI() {
+    std::vector<TString> inputFiles;
+    for (int i = 1; i < gApplication->Argc(); ++i) {
+        TString fileName = gApplication->Argv(i);
+        if (fileName.EndsWith(".root")) {
+            inputFiles.push_back(fileName);
+        }
+    }
+
+    if (inputFiles.empty()) {
+        std::cout << "No files provided, please provide a .root file name as an argument" << std::endl;
+        return;
+    }
+    if (inputFiles.size() > 1) {
+        std::cout << "Error: Too many input files. Please provide only one .root file." << std::endl;
+        return;
+    }
+
+    std::cout << "Submitted file: " << inputFiles[0] << std::endl;
+    new MyMainFrame(gClient->GetRoot(), 600, 600, inputFiles[0]);
 }
