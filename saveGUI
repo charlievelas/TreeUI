@@ -615,7 +615,24 @@ MyMainFrame::~MyMainFrame() {
     }
 }
 
-void saveGUI(const char* filename) {
-    // Popup the GUI with the given ROOT file...
-    new MyMainFrame(gClient->GetRoot(), 900, 700, filename);
+void saveGUI() {
+    std::vector<TString> inputFiles;
+    for (int i = 1; i < gApplication->Argc(); ++i) {
+        TString fileName = gApplication->Argv(i);
+        if (fileName.EndsWith(".root")) {
+            inputFiles.push_back(fileName);
+        }
+    }
+
+    if (inputFiles.empty()) {
+        std::cout << "No files provided, please provide a .root file name as an argument" << std::endl;
+        return;
+    }
+    if (inputFiles.size() > 1) {
+        std::cout << "Error: Too many input files. Please provide only one .root file." << std::endl;
+        return;
+    }
+
+    std::cout << "Submitted file: " << inputFiles[0] << std::endl;
+    new MyMainFrame(gClient->GetRoot(), 600, 600, inputFiles[0]);
 }
