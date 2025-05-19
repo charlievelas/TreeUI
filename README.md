@@ -22,7 +22,7 @@ alias ThreeDGUI="root $TreeUI/ThreeDGUI"
 
 ## How to run
 All GUIs, except tandemGUI, can be run by doing the following
-        [GUI name] /location/of/root/file.root
+	[GUI name] /location/of/root/file.root
 
 For example
 	loadGUI /location/of/root/file.root
