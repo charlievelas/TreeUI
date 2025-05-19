@@ -32,6 +32,7 @@ tandemGUI is an exception due to addtional, optional execution option.
 tandemGUI can be run by
 	root 'tandem("/location/of/root/file1.root","/location/of/root/file2.root")'
 
-Both root files must have the same branches. If not, then the override option an be used
+Both root files must have the same branches. If not, then the override option can be used
+
 	root 'tandem("/location/of/root/file1.root","/location/of/root/file2.root","override")'	
 
