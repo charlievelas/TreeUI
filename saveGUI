@@ -350,7 +350,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     draw->Connect("Clicked()", "MyMainFrame", this, "DoDraw()");
     hButsInputFrame->AddFrame(draw, new TGLayoutHints(kLHintsCenterY, 5, 5, 5, 5)); 
  
-    // Add the fit button
+    // Add the save button
     TGTextButton *save = new TGTextButton(hButsInputFrame, "&Save");
     save->SetMargins(10, 10, 7, 7);
     save->Connect("Clicked()", "MyMainFrame", this, "DoSave()");
