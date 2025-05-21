@@ -104,7 +104,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     vframe1->AddFrame(canvasLabel1, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 3, 5, 5));
 
     // Create canvas widget (on the left)
-    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", vframe1, 700, 700);
+    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", vframe1, 800, 800);
     vframe1->AddFrame(fEcanvas, new TGLayoutHints(kLHintsCenterY, 5, 3, 5, 5)); // Canvas with all margins
 
     // Add canvas1 and label1 to hframe
@@ -683,11 +683,11 @@ void MyMainFrame::DoDraw() {
        drawTitle += branchName.c_str();
    } else {
        TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
-       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", branchName.c_str(), Xbranch->GetName(), XnBins, XminX, XmaxX, nBins, minX, maxX);
+       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", Xbranch->GetName(), branchName.c_str(), nBins, minX, maxX, nBins, XminX, XmaxX);
        drawStyle = "COLZ";
-       drawTitle += branchName.c_str();
-       drawTitle += ":";
        drawTitle += Form("%s",Xbranch->GetName());
+       drawTitle += ":";
+       drawTitle += branchName.c_str();
        fEcanvas->GetCanvas()->SetLogz();
    }
 
@@ -855,6 +855,13 @@ void MyMainFrame::DoDraw() {
 
    // Now, draw the histogram 1
    fEcanvas->GetCanvas()->cd();  // Ensure we are drawing on the right pad
+   
+   // Adjust the pad margins
+   gPad->SetLeftMargin(0.125);
+   gPad->SetRightMargin(0.125);
+   gPad->SetTopMargin(0.125);
+   gPad->SetBottomMargin(0.125);
+
 
    // Clear previous drawing on the canvas to avoid overlapping plots
    fEcanvas->GetCanvas()->Clear();
@@ -865,10 +872,15 @@ void MyMainFrame::DoDraw() {
    // Get histogram
    if (fXComboBox->GetSelected()==-1 || fXComboBox->GetSelected()==0){
        TH1F *hist = (TH1F*)gDirectory->Get("hist");
+       hist->GetXaxis()->SetTitle(fComboBox->GetSelectedEntry()->GetTitle());
        hist->SetTitle(drawTitle.c_str());
+       //hist->SetTitleOffset(0.7, "");
    } else {
        TH2F *hist = (TH2F*)gDirectory->Get("hist");
+       hist->GetXaxis()->SetTitle(branchName.c_str());
+       hist->GetYaxis()->SetTitle(fXComboBox->GetSelectedEntry()->GetTitle());
        hist->SetTitle(drawTitle.c_str());
+       //hist->SetTitleOffset(0.7, "");
    }
 
    // Update the canvas to reflect the new drawing
@@ -916,5 +928,6 @@ void moreConsGUI() {
     }
 
     std::cout << "Submitted file: " << inputFiles[0] << std::endl;
-    new MyMainFrame(gClient->GetRoot(), 600, 600, inputFiles[0]);
+
+    new MyMainFrame(gClient->GetRoot(), 800, 800, inputFiles[0]);
 }
