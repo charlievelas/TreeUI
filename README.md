@@ -14,11 +14,13 @@ alias antiConGUI="root $TreeUI/antiConGUI"
 alias antiConSaveGUI="root $TreeUI/antiConSaveGUI"
 alias fitGUI="root $TreeUI/fitGUI"
 alias moreConsGUI="root $TreeUI/moreConsGUI"
+alias moreConsSaveGUI="root $TreeUI/moreConsSaveGUI"
 alias multiGUI="root $TreeUI/multiGUI"
 alias saveGUI="root $TreeUI/saveGUI"
 alias tandemGUI="$TreeUI/tandemGUI"
 alias ThreeDGUI="root $TreeUI/ThreeDGUI"
 ```
+It's recommended to add all of these aliases to your bash_alias, bashrc or equivalent file
 
 ## How to run
 All GUIs, except tandemGUI, can be run by doing the following
