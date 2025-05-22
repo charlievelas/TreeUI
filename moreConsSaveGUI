@@ -697,7 +697,7 @@ void MyMainFrame::DoDraw() {
        drawTitle += branchName.c_str();
    } else {
        TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
-       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", Xbranch->GetName(), branchName.c_str(), nBins, minX, maxX, nBins, XminX, XmaxX);
+       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", Xbranch->GetName(), branchName.c_str(), nBins, minX, maxX, XnBins, XminX, XmaxX);
        drawStyle = "COLZ";
        drawTitle += Form("%s",Xbranch->GetName());
        drawTitle += ":";

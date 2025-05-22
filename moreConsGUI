@@ -31,6 +31,8 @@ private:
     TGComboBox          *fTenthComboBox;     // Tenth drop-down for branch to apply to
     TGComboBox          *fEleventhComboBox;  // Eleventh drop-down for branch to apply to
     TGComboBox          *fTwelfthComboBox;   // Twelfth drop-down for branch to apply to
+    TGComboBox          *fThirteenthComboBox;   // Thirteenth drop-down for branch to apply to
+    TGComboBox          *fFourteenthComboBox;   // Fourteenth drop-down for branch to apply to
     TGNumberEntry       *fBinsEntry;  // Number of bins input
     TGNumberEntry       *fMinXEntry;  // Minimum X input
     TGNumberEntry       *fMaxXEntry;  // Maximum X input
@@ -61,6 +63,10 @@ private:
     TGNumberEntry       *fEleventhMaxInput; // Max input for the eleventh branch condition
     TGNumberEntry       *fTwelfthMinInput; // Min input for the twelth branch condition
     TGNumberEntry       *fTwelfthMaxInput; // Max input for the twelth branch condition
+    TGNumberEntry       *fThirteenthMinInput; // Min input for the thirteenth branch condition
+    TGNumberEntry       *fThirteenthMaxInput; // Max input for the thirteenth branch condition
+    TGNumberEntry       *fFourteenthMinInput; // Min input for the fourteenth branch condition
+    TGNumberEntry       *fFourteenthMaxInput; // Max input for the fourteenth branch condition
     TFile               *fFile;       // ROOT file pointer
     TTree               *fTree;       // TTree pointer
     Int_t               fSelectedBranch; // Store selected branch index
@@ -227,11 +233,12 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
 
     // Add a 3D vertical line between vframe and vframe_cons
     TGVertical3DLine *vline1 = new TGVertical3DLine(hframe);
-    vline1->Resize(1, 650);  // 1px wide, 300px tall (adjust height as needed)
+    vline1->Resize(1, 750);  //
     hframe->AddFrame(vline1, new TGLayoutHints(kLHintsCenterY, 10, 10, 10, 10)); // Center vertically, add margins
 
     //// Conditions 1
 
+    // Condition 1
     // Create a new vertical frame to the right of vframe for additional controls/conditions
     TGVerticalFrame *vframe_cons = new TGVerticalFrame(hframe);
 
@@ -273,199 +280,113 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
 
     vframe_cons->AddFrame(minMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
-    // Add second condition fields (for the second combo box, and min/max input)
-    TGVerticalFrame *secondConditionFrame = new TGVerticalFrame(vframe_cons, 0, 0);
-
-    // Add the second branch label 
+    // Second condition
+    TGVerticalFrame *secondConditionFrame = new TGVerticalFrame(vframe_cons, 200, 100);
     TGLabel *secondBranchLabel = new TGLabel(secondConditionFrame, "Second branch to cut on:");
     secondConditionFrame->AddFrame(secondBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
-
     fSecondComboBox = new TGComboBox(secondConditionFrame, "Select branch", 50);
     fSecondComboBox->Resize(200, 25);
     secondConditionFrame->AddFrame(fSecondComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
-
-    // Second condition min/max inputs
     TGHorizontalFrame *secondMinMaxFrame = new TGHorizontalFrame(secondConditionFrame, 0, 0);
     TGLabel *secondMinLabel = new TGLabel(secondMinMaxFrame, "Min");
     secondMinMaxFrame->AddFrame(secondMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
     fSecondMinInput = new TGNumberEntry(secondMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fSecondMinInput->SetWidth(60);
     secondMinMaxFrame->AddFrame(fSecondMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
     TGLabel *secondMaxLabel = new TGLabel(secondMinMaxFrame, "Max");
     secondMinMaxFrame->AddFrame(secondMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
     fSecondMaxInput = new TGNumberEntry(secondMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fSecondMaxInput->SetWidth(60);
     secondMinMaxFrame->AddFrame(fSecondMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
     secondConditionFrame->AddFrame(secondMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-
     vframe_cons->AddFrame(secondConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
-    // Create a vertical frame for the new drop-down list and the corresponding min/max input boxes
-    TGVerticalFrame *branchInputFrame = new TGVerticalFrame(vframe_cons, 200, 100);
-
-    // "Third branch to cut on:" label and ComboBox
-    TGLabel *branchInputLabel = new TGLabel(branchInputFrame, "Third branch to cut on:");
-    branchInputFrame->AddFrame(branchInputLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
-
-    fThirdComboBox = new TGComboBox(branchInputFrame, "Select branch", 50);
+    // Third condition
+    TGVerticalFrame *thirdConditionFrame = new TGVerticalFrame(vframe_cons, 200, 100);
+    TGLabel *thirdBranchLabel = new TGLabel(thirdConditionFrame, "Third branch to cut on:");
+    thirdConditionFrame->AddFrame(thirdBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+    fThirdComboBox = new TGComboBox(thirdConditionFrame, "Select branch", 50);
     fThirdComboBox->Resize(200, 25);
-    branchInputFrame->AddFrame(fThirdComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
-
-    // Create a horizontal frame for the min/max input boxes
-    TGHorizontalFrame *branchMinMaxFrame = new TGHorizontalFrame(branchInputFrame, 0, 0);
-
-    // Min label
-    TGLabel *branchMinLabel = new TGLabel(branchMinMaxFrame, "Min");
-    branchMinMaxFrame->AddFrame(branchMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Min input box (float)
-    fThirdMinInput = new TGNumberEntry(branchMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    thirdConditionFrame->AddFrame(fThirdComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    TGHorizontalFrame *thirdMinMaxFrame = new TGHorizontalFrame(thirdConditionFrame, 0, 0);
+    TGLabel *thirdMinLabel = new TGLabel(thirdMinMaxFrame, "Min");
+    thirdMinMaxFrame->AddFrame(thirdMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fThirdMinInput = new TGNumberEntry(thirdMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fThirdMinInput->SetWidth(60);
-    branchMinMaxFrame->AddFrame(fThirdMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max label
-    TGLabel *branchMaxLabel = new TGLabel(branchMinMaxFrame, "Max");
-    branchMinMaxFrame->AddFrame(branchMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max input box (float)
-    fThirdMaxInput = new TGNumberEntry(branchMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    thirdMinMaxFrame->AddFrame(fThirdMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    TGLabel *thirdMaxLabel = new TGLabel(thirdMinMaxFrame, "Max");
+    thirdMinMaxFrame->AddFrame(thirdMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fThirdMaxInput = new TGNumberEntry(thirdMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fThirdMaxInput->SetWidth(60);
-    branchMinMaxFrame->AddFrame(fThirdMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    thirdMinMaxFrame->AddFrame(fThirdMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    thirdConditionFrame->AddFrame(thirdMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+    vframe_cons->AddFrame(thirdConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
-    // Add the min/max input frame to the main frame
-    branchInputFrame->AddFrame(branchMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-
-    // Add the new frame to the main vertical frame (vframe_cons)
-    vframe_cons->AddFrame(branchInputFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-
-    // Create a vertical frame for the new drop-down list and the corresponding min/max input boxes
+    // Fourth condition
     TGVerticalFrame *fourthConditionFrame = new TGVerticalFrame(vframe_cons, 200, 100);
-
-    // "Foruth branch to cut on:" label and ComboBox
     TGLabel *fourthBranchLabel = new TGLabel(fourthConditionFrame, "Fourth branch to cut on:");
     fourthConditionFrame->AddFrame(fourthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
-
     fFourthComboBox = new TGComboBox(fourthConditionFrame, "Select branch", 50);
     fFourthComboBox->Resize(200, 25);
     fourthConditionFrame->AddFrame(fFourthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
-
-    // Create a horizontal frame for the min/max input boxes
     TGHorizontalFrame *fourthMinMaxFrame = new TGHorizontalFrame(fourthConditionFrame, 0, 0);
-
-    // Min label
     TGLabel *fourthMinLabel = new TGLabel(fourthMinMaxFrame, "Min");
     fourthMinMaxFrame->AddFrame(fourthMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Min input box (float)
     fFourthMinInput = new TGNumberEntry(fourthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fFourthMinInput->SetWidth(60);
     fourthMinMaxFrame->AddFrame(fFourthMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max label
     TGLabel *fourthMaxLabel = new TGLabel(fourthMinMaxFrame, "Max");
     fourthMinMaxFrame->AddFrame(fourthMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max input box (float)
     fFourthMaxInput = new TGNumberEntry(fourthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fFourthMaxInput->SetWidth(60);
     fourthMinMaxFrame->AddFrame(fFourthMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Add the min/max input frame to the main frame
     fourthConditionFrame->AddFrame(fourthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-
-    // Add the new frame to the main vertical frame (vframe_cons)
     vframe_cons->AddFrame(fourthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
-    // Create a vertical frame for the new drop-down list and the corresponding min/max input boxes
+    // Fifth condition
     TGVerticalFrame *fifthConditionFrame = new TGVerticalFrame(vframe_cons, 200, 100);
-
-    // "Fifth branch to cut on:" label and ComboBox
     TGLabel *fifthBranchLabel = new TGLabel(fifthConditionFrame, "Fifth branch to cut on:");
     fifthConditionFrame->AddFrame(fifthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
-
     fFifthComboBox = new TGComboBox(fifthConditionFrame, "Select branch", 50);
     fFifthComboBox->Resize(200, 25);
     fifthConditionFrame->AddFrame(fFifthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
-
-    // Create a horizontal frame for the min/max input boxes
     TGHorizontalFrame *fifthMinMaxFrame = new TGHorizontalFrame(fifthConditionFrame, 0, 0);
-
-    // Min label
     TGLabel *fifthMinLabel = new TGLabel(fifthMinMaxFrame, "Min");
     fifthMinMaxFrame->AddFrame(fifthMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Min input box (float)
     fFifthMinInput = new TGNumberEntry(fifthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fFifthMinInput->SetWidth(60);
     fifthMinMaxFrame->AddFrame(fFifthMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max label
     TGLabel *fifthMaxLabel = new TGLabel(fifthMinMaxFrame, "Max");
     fifthMinMaxFrame->AddFrame(fifthMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max input box (float)
     fFifthMaxInput = new TGNumberEntry(fifthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fFifthMaxInput->SetWidth(60);
     fifthMinMaxFrame->AddFrame(fFifthMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Add the min/max input frame to the main frame
     fifthConditionFrame->AddFrame(fifthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-
-    // Add the new frame to the main vertical frame (vframe_cons)
     vframe_cons->AddFrame(fifthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
-    // Create a vertical frame for the new drop-down list and the corresponding min/max input boxes
+    // Sixth condition
     TGVerticalFrame *sixthConditionFrame = new TGVerticalFrame(vframe_cons, 200, 100);
-
-    // "Sixth branch to cut on:" label and ComboBox
     TGLabel *sixthBranchLabel = new TGLabel(sixthConditionFrame, "Sixth branch to cut on:");
     sixthConditionFrame->AddFrame(sixthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
-
     fSixthComboBox = new TGComboBox(sixthConditionFrame, "Select branch", 50);
     fSixthComboBox->Resize(200, 25);
     sixthConditionFrame->AddFrame(fSixthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
-
-    // Create a horizontal frame for the min/max input boxes
     TGHorizontalFrame *sixthMinMaxFrame = new TGHorizontalFrame(sixthConditionFrame, 0, 0);
-
-    // Min label
     TGLabel *sixthMinLabel = new TGLabel(sixthMinMaxFrame, "Min");
     sixthMinMaxFrame->AddFrame(sixthMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Min input box (float)
     fSixthMinInput = new TGNumberEntry(sixthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fSixthMinInput->SetWidth(60);
     sixthMinMaxFrame->AddFrame(fSixthMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max label
     TGLabel *sixthMaxLabel = new TGLabel(sixthMinMaxFrame, "Max");
     sixthMinMaxFrame->AddFrame(sixthMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Max input box (float)
     fSixthMaxInput = new TGNumberEntry(sixthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
     fSixthMaxInput->SetWidth(60);
     sixthMinMaxFrame->AddFrame(fSixthMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
-
-    // Add the min/max input frame to the main frame
     sixthConditionFrame->AddFrame(sixthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-
-    // Add the new frame to the main vertical frame (vframe_cons)
     vframe_cons->AddFrame(sixthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
-    // Add completed widgets frame to main frame
-    hframe->AddFrame(vframe_cons, new TGLayoutHints(kLHintsCenterY | kLHintsCenterX, 2, 2, 2, 2));
-
-    //// Conditions 2
-    //Add new vertical frame for conditions 7-12
-    TGVerticalFrame *vframe_cons2 = new TGVerticalFrame(hframe, 0,0);
-    hframe->AddFrame(vframe_cons2, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 5, 5, 5, 5));
-
     // Seventh condition
-    TGVerticalFrame *seventhConditionFrame = new TGVerticalFrame(vframe_cons2, 200, 100);
+    TGVerticalFrame *seventhConditionFrame = new TGVerticalFrame(vframe_cons, 200, 100);
     TGLabel *seventhBranchLabel = new TGLabel(seventhConditionFrame, "Seventh branch to cut on:");
     seventhConditionFrame->AddFrame(seventhBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
     fSeventhComboBox = new TGComboBox(seventhConditionFrame, "Select branch", 50);
@@ -483,7 +404,16 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     fSeventhMaxInput->SetWidth(60);
     seventhMinMaxFrame->AddFrame(fSeventhMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
     seventhConditionFrame->AddFrame(seventhMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
-    vframe_cons2->AddFrame(seventhConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+    vframe_cons->AddFrame(seventhConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Add completed widgets frame to main frame
+    hframe->AddFrame(vframe_cons, new TGLayoutHints(kLHintsCenterY | kLHintsCenterX, 2, 2, 2, 2));
+
+
+    //// Conditions 2
+    //Add new vertical frame for conditions 7-12
+    TGVerticalFrame *vframe_cons2 = new TGVerticalFrame(hframe, 0,0);
+    hframe->AddFrame(vframe_cons2, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 5, 5, 5, 5));
 
     // Eighth condition
     TGVerticalFrame *eighthConditionFrame = new TGVerticalFrame(vframe_cons2, 200, 100);
@@ -590,6 +520,47 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     twelfthConditionFrame->AddFrame(twelfthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
     vframe_cons2->AddFrame(twelfthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
+    // Thirteenth condition
+    TGVerticalFrame *thirteenthConditionFrame = new TGVerticalFrame(vframe_cons2, 200, 100);
+    TGLabel *thirteenthBranchLabel = new TGLabel(thirteenthConditionFrame, "Thirteenth branch to cut on:");
+    thirteenthConditionFrame->AddFrame(thirteenthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+    fThirteenthComboBox = new TGComboBox(thirteenthConditionFrame, "Select branch", 50);
+    fThirteenthComboBox->Resize(200, 25);
+    thirteenthConditionFrame->AddFrame(fThirteenthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    TGHorizontalFrame *thirteenthMinMaxFrame = new TGHorizontalFrame(thirteenthConditionFrame, 0, 0);
+    TGLabel *thirteenthMinLabel = new TGLabel(thirteenthMinMaxFrame, "Min");
+    thirteenthMinMaxFrame->AddFrame(thirteenthMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fThirteenthMinInput = new TGNumberEntry(thirteenthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fThirteenthMinInput->SetWidth(60);
+    thirteenthMinMaxFrame->AddFrame(fThirteenthMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    TGLabel *thirteenthMaxLabel = new TGLabel(thirteenthMinMaxFrame, "Max");
+    thirteenthMinMaxFrame->AddFrame(thirteenthMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fThirteenthMaxInput = new TGNumberEntry(thirteenthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fThirteenthMaxInput->SetWidth(60);
+    thirteenthMinMaxFrame->AddFrame(fThirteenthMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    thirteenthConditionFrame->AddFrame(thirteenthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+    vframe_cons2->AddFrame(thirteenthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+
+    // Fourteenth condition
+    TGVerticalFrame *fourteenthConditionFrame = new TGVerticalFrame(vframe_cons2, 200, 100);
+    TGLabel *fourteenthBranchLabel = new TGLabel(fourteenthConditionFrame, "Fourteenth branch to cut on:");
+    fourteenthConditionFrame->AddFrame(fourteenthBranchLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 3, 4));
+    fFourteenthComboBox = new TGComboBox(fourteenthConditionFrame, "Select branch", 50);
+    fFourteenthComboBox->Resize(200, 25);
+    fourteenthConditionFrame->AddFrame(fFourteenthComboBox, new TGLayoutHints(kLHintsCenterY, 5, 5, 3, 4));
+    TGHorizontalFrame *fourteenthMinMaxFrame = new TGHorizontalFrame(fourteenthConditionFrame, 0, 0);
+    TGLabel *fourteenthMinLabel = new TGLabel(fourteenthMinMaxFrame, "Min");
+    fourteenthMinMaxFrame->AddFrame(fourteenthMinLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fFourteenthMinInput = new TGNumberEntry(fourteenthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fFourteenthMinInput->SetWidth(60);
+    fourteenthMinMaxFrame->AddFrame(fFourteenthMinInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    TGLabel *fourteenthMaxLabel = new TGLabel(fourteenthMinMaxFrame, "Max");
+    fourteenthMinMaxFrame->AddFrame(fourteenthMaxLabel, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fFourteenthMaxInput = new TGNumberEntry(fourteenthMinMaxFrame, 0, 5, -1, TGNumberFormat::kNESReal, TGNumberFormat::kNEAAnyNumber);
+    fFourteenthMaxInput->SetWidth(60);
+    fourteenthMinMaxFrame->AddFrame(fFourteenthMaxInput, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
+    fourteenthConditionFrame->AddFrame(fourteenthMinMaxFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
+    vframe_cons2->AddFrame(fourteenthConditionFrame, new TGLayoutHints(kLHintsCenterX, 5, 5, 5, 5));
 
     //// Add final horizontal frame to the widget
     fMain->AddFrame(hframe, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
@@ -612,6 +583,8 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
     fTenthComboBox->AddEntry("None", 0); // Add "None" branch in first place
     fEleventhComboBox->AddEntry("None", 0); // Add "None" branch in first place
     fTwelfthComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fThirteenthComboBox->AddEntry("None", 0); // Add "None" branch in first place
+    fFourteenthComboBox->AddEntry("None", 0); // Add "None" branch in first place
 
     // Populate the ComboBoxes with branch names
     if (fTree) {
@@ -632,6 +605,8 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h, const char* file
           fTenthComboBox->AddEntry(branch->GetName(), i + 1);        // Add branches to ComboBox
           fEleventhComboBox->AddEntry(branch->GetName(), i + 1);     // Add branches to ComboBox
           fTwelfthComboBox->AddEntry(branch->GetName(), i + 1);      // Add branches to ComboBox
+          fThirteenthComboBox->AddEntry(branch->GetName(), i + 1);   // Add branches to ComboBox
+          fFourteenthComboBox->AddEntry(branch->GetName(), i + 1);   // Add branches to ComboBox
       }
     }
 
@@ -683,7 +658,7 @@ void MyMainFrame::DoDraw() {
        drawTitle += branchName.c_str();
    } else {
        TBranch *Xbranch = (TBranch*)fTree->GetListOfBranches()->At(fXComboBox->GetSelected() - 1); // fSelectedBranch is 1-based
-       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", Xbranch->GetName(), branchName.c_str(), nBins, minX, maxX, nBins, XminX, XmaxX);
+       drawCommand = TString::Format("%s:%s>>hist(%d,%f,%f,%d,%f,%f)", Xbranch->GetName(), branchName.c_str(), nBins, minX, maxX, XnBins, XminX, XmaxX);
        drawStyle = "COLZ";
        drawTitle += Form("%s",Xbranch->GetName());
        drawTitle += ":";
@@ -692,6 +667,7 @@ void MyMainFrame::DoDraw() {
    }
 
    TString drawCondition = "";
+   int zeroRangeCount=0;
 
    // Apply first condition (cut on selected branch)
    Int_t cutIndex = fFirstComboBox->GetSelected();
@@ -701,6 +677,7 @@ void MyMainFrame::DoDraw() {
       Double_t cutMax = fFirstMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", cutBranch->GetName(), cutMin, cutBranch->GetName(), cutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",cutBranch->GetName(), cutMin, cutMax);  
+      zeroRangeCount = (cutMin==cutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply second condition if selected
@@ -714,6 +691,7 @@ void MyMainFrame::DoDraw() {
       Double_t secondCutMax = fSecondMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", secondCutBranch->GetName(), secondCutMin, secondCutBranch->GetName(), secondCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",secondCutBranch->GetName(), secondCutMin, secondCutMax);
+      zeroRangeCount = (secondCutMin==secondCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply third condition if selected 
@@ -727,6 +705,7 @@ void MyMainFrame::DoDraw() {
       Double_t branchMax = fThirdMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", branchInput->GetName(), branchMin, branchInput->GetName(), branchMax);
       drawTitle += Form(", %s[%.10g,%.10g]",branchInput->GetName(), branchMin, branchMax);
+      zeroRangeCount = (branchMin==branchMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply fourth condition if selected 
@@ -740,6 +719,7 @@ void MyMainFrame::DoDraw() {
       Double_t fourthCutMax = fFourthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", fourthCutBranch->GetName(), fourthCutMin, fourthCutBranch->GetName(), fourthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",fourthCutBranch->GetName(), fourthCutMin, fourthCutMax);
+      zeroRangeCount = (fourthCutMin==fourthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply fifth condition if selected 
@@ -753,6 +733,7 @@ void MyMainFrame::DoDraw() {
       Double_t fifthCutMax = fFifthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", fifthCutBranch->GetName(), fifthCutMin, fifthCutBranch->GetName(), fifthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",fifthCutBranch->GetName(), fifthCutMin, fifthCutMax);
+      zeroRangeCount = (fifthCutMin==fifthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply sixth condition if selected 
@@ -766,6 +747,7 @@ void MyMainFrame::DoDraw() {
       Double_t sixthCutMax = fSixthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", sixthCutBranch->GetName(), sixthCutMin, sixthCutBranch->GetName(), sixthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",sixthCutBranch->GetName(), sixthCutMin, sixthCutMax);
+      zeroRangeCount = (sixthCutMin==sixthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply seventh condition if selected 
@@ -779,6 +761,7 @@ void MyMainFrame::DoDraw() {
       Double_t seventhCutMax = fSeventhMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", seventhCutBranch->GetName(), seventhCutMin, seventhCutBranch->GetName(), seventhCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",seventhCutBranch->GetName(), seventhCutMin, seventhCutMax);
+      zeroRangeCount = (seventhCutMin==seventhCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply eighth condition if selected 
@@ -792,6 +775,7 @@ void MyMainFrame::DoDraw() {
       Double_t eighthCutMax = fEighthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", eighthCutBranch->GetName(), eighthCutMin, eighthCutBranch->GetName(), eighthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",eighthCutBranch->GetName(), eighthCutMin, eighthCutMax);
+      zeroRangeCount = (eighthCutMin==eighthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply ninth condition if selected 
@@ -805,6 +789,7 @@ void MyMainFrame::DoDraw() {
       Double_t ninthCutMax = fNinthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", ninthCutBranch->GetName(), ninthCutMin, ninthCutBranch->GetName(), ninthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",ninthCutBranch->GetName(), ninthCutMin, ninthCutMax);
+      zeroRangeCount = (ninthCutMin==ninthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply tenth condition if selected 
@@ -818,6 +803,7 @@ void MyMainFrame::DoDraw() {
       Double_t tenthCutMax = fTenthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", tenthCutBranch->GetName(), tenthCutMin, tenthCutBranch->GetName(), tenthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",tenthCutBranch->GetName(), tenthCutMin, tenthCutMax);
+      zeroRangeCount = (tenthCutMin==tenthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply eleventh condition if selected 
@@ -831,6 +817,7 @@ void MyMainFrame::DoDraw() {
       Double_t eleventhCutMax = fEleventhMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", eleventhCutBranch->GetName(), eleventhCutMin, eleventhCutBranch->GetName(), eleventhCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",eleventhCutBranch->GetName(), eleventhCutMin, eleventhCutMax);
+      zeroRangeCount = (eleventhCutMin==eleventhCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
    }
 
    // Apply twelfth condition if selected 
@@ -844,12 +831,49 @@ void MyMainFrame::DoDraw() {
       Double_t twelfthCutMax = fTwelfthMaxInput->GetNumber();
       drawCondition += Form("%s > %.10g && %s < %.10g", twelfthCutBranch->GetName(), twelfthCutMin, twelfthCutBranch->GetName(), twelfthCutMax);
       drawTitle += Form(", %s[%.10g,%.10g]",twelfthCutBranch->GetName(), twelfthCutMin, twelfthCutMax);
+      zeroRangeCount = (twelfthCutMin==twelfthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
+   }
+
+   // Apply thirteenth condition if selected 
+   Int_t thirteenthCutIndex = fThirteenthComboBox->GetSelected();
+   if (thirteenthCutIndex > 0) {
+      if (twelfthCutIndex > 0 || eleventhCutIndex > 0 || tenthCutIndex > 0 || ninthCutIndex > 0 || eighthCutIndex > 0 || seventhCutIndex > 0 || sixthCutIndex > 0 || fifthCutIndex > 0 || fourthCutIndex > 0 || branchInputIndex > 0 || secondCutIndex > 0 || cutIndex > 0) {
+         drawCondition += " && ";
+      }
+      TBranch *thirteenthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(thirteenthCutIndex - 1);
+      Double_t thirteenthCutMin = fThirteenthMinInput->GetNumber();
+      Double_t thirteenthCutMax = fThirteenthMaxInput->GetNumber();
+      drawCondition += Form("%s > %.10g && %s < %.10g", thirteenthCutBranch->GetName(), thirteenthCutMin, thirteenthCutBranch->GetName(), thirteenthCutMax);
+      drawTitle += Form(", %s[%.10g,%.10g]",thirteenthCutBranch->GetName(), thirteenthCutMin, thirteenthCutMax);
+      zeroRangeCount = (thirteenthCutMin==thirteenthCutMax) ? ++zeroRangeCount:zeroRangeCount=zeroRangeCount;
+   }
+
+   // Apply fourteenth condition if selected 
+   Int_t fourteenthCutIndex = fFourteenthComboBox->GetSelected();
+   if (fourteenthCutIndex > 0) {
+      if (thirteenthCutIndex > 0 || twelfthCutIndex > 0 || eleventhCutIndex > 0 || tenthCutIndex > 0 || ninthCutIndex > 0 || eighthCutIndex > 0 || seventhCutIndex > 0 || sixthCutIndex > 0 || fifthCutIndex > 0 || fourthCutIndex > 0 || branchInputIndex > 0 || secondCutIndex > 0 || cutIndex > 0) {
+         drawCondition += " && ";
+      }
+      TBranch *fourteenthCutBranch = (TBranch*)fTree->GetListOfBranches()->At(fourteenthCutIndex - 1);
+      Double_t fourteenthCutMin = fFourteenthMinInput->GetNumber();
+      Double_t fourteenthCutMax = fFourteenthMaxInput->GetNumber();
+      drawCondition += Form("%s > %.10g && %s < %.10g", fourteenthCutBranch->GetName(), fourteenthCutMin, fourteenthCutBranch->GetName(), fourteenthCutMax);
+      drawTitle += Form(", %s[%.10g,%.10g]",fourteenthCutBranch->GetName(), fourteenthCutMin, fourteenthCutMax);
+      zeroRangeCount = (fourteenthCutMin==fourteenthCutMax) ? ++zeroRangeCount:zeroRangeCount;
+   }
+
+   if (zeroRangeCount>0){
+      std::cout << "Error: One or more condtions have a range of zero," << std::endl;
+      std::cout << "please check condition activity (0 = inactive, branch number = active)" << std::endl;
+      std::cout << "1=" << cutIndex+1 << std::setw(5) << " 2=" << secondCutIndex+1 << std::setw(5) << " 3=" << branchInputIndex+1 << std::setw(5) << " 4=" << fourthCutIndex+1 << std::setw(5) << " 5=" << fifthCutIndex+1 << std::setw(5) << " 6=" << sixthCutIndex+1 << std::setw(5) << " 7=" << seventhCutIndex+1 << std::endl;
+      std::cout << "8=" << eighthCutIndex+1 << std::setw(5) << " 9=" << ninthCutIndex+1 << std::setw(5) << " 10=" << tenthCutIndex+1 << std::setw(5) << " 11=" << eleventhCutIndex+1 << std::setw(5) << " 12=" << twelfthCutIndex+1 << std::setw(5) << " 13=" << thirteenthCutIndex+1 << std::setw(5) << " 14=" << fourteenthCutIndex+1 << std::endl;
+      return;
    }
 
    // Debug print: Check the draw strings
    std::cout << "////////  Drawn with following  ////////" << std::endl;
-   //std::cout << "Draw command: " << drawCommand.Data() << std::endl;
-   std::cout << "Draw condition: " << drawCondition.Data() << std::endl;
+   std::cout << "Draw command: " << drawCommand << std::endl;
+   std::cout << "Draw condition(s): " << drawCondition.Data() << std::endl;
    std::cout << "Draw stlye: " << drawStyle.Data() << std::endl;
    std::cout << "Draw title: " << drawTitle << std::endl;
 
