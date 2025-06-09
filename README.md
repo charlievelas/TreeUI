@@ -9,14 +9,15 @@ For bash
 git clone https://github.com/charlievelas/TreeUI.git
 cd TreeUI
 export TreeUI=$PWD
-alias loadGUI="root $TreeUI/loadGUI"
 alias antiConGUI="root $TreeUI/antiConGUI"
 alias antiConSaveGUI="root $TreeUI/antiConSaveGUI"
 alias fitGUI="root $TreeUI/fitGUI"
+alias loadGUI="root $TreeUI/loadGUI"
 alias moreConsGUI="root $TreeUI/moreConsGUI"
 alias moreMoreConsGUI="root $TreeUI/moreMoreConsGUI"
 alias moreConsSaveGUI="root $TreeUI/moreConsSaveGUI"
-alias multiGUI="root $TreeUI/multiGUI"
+alias orMoreConsGUI="root $TreeUI/orMoreConsGUI"
+alias loadGUI="root $TreeUI/loadGUI"
 alias saveGUI="root $TreeUI/saveGUI"
 alias tandemGUI="$TreeUI/tandemGUI"
 alias ThreeDGUI="root $TreeUI/ThreeDGUI"
